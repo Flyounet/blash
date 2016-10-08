@@ -1,0 +1,884 @@
+#!/bin/bash
+
+# /*------------------------------------------------------------------------*\
+# |                                                                          |
+# |                WTFPL & DSSL apply on this material.                      |
+# |                                                                          |
+# +--------------------------------------------------------------------------+
+# |                                                                          |
+# | Blash : A Static Blog Generator written (mostly) in Bash (and Perl)      |
+# | Copyright (C) 2015-2016 Flyounet — Tous droits réservés.                 |
+# |                                                                          |
+# | Cette œuvre est distribuée SANS AUCUNE GARANTIE hormis celle d'être      |
+# | distribuée sous les termes de la Licence Demerdez-vous («Demerden Sie    |
+# | Sich License») telle que publiée par Flyounet : soit la version 1 de     |
+# | cette licence,soit (à votre gré) toute version ultérieure.               |
+# | telle que publiée par Flyounet : soit la version 1 de cette licence,     |
+# | soit (à votre gré) toute version ultérieure.                             |
+# |                                                                          |
+# | Vous devriez avoir reçu une copie de la Licence Démerdez-vous avec cette |
+# | œuvre ; si ce n’est pas le cas, consultez :                              |
+# | <http://dssl.flyounet.net/licenses/>.                                    |
+# |                                                                          |
+# +--------------------------------------------------------------------------+
+# |                                                                          |
+# | Blash is a fork ok Baker (as in Baker, GPLv2 also apply on Blash).       |
+# | Baker, Copyright (C) 2013-2015 taylorchuu — Tous droits réservés.        |
+# | All subsequent modifications, I made, to commit                          |
+# | 8dce0cd46c46d8ec29541080058f79c9e0ff579c of tailorchuu have been done    |
+# | under the DSSL and WTFPL licenses.                                       |
+# |                                                                          |
+# \*------------------------------------------------------------------------*/
+
+
+VERSION='1.2.0'
+
+findConfigFile() {
+	BLASH_DEFAULT_CONFIGDIR="${BLASH_DEFAULT_CONFIGDIR:=${XDG_CONFIG_HOME:=$HOME/.config}}"
+	BLASH_DEFAULT_CONFIGFILE="${BLASH_DEFAULT_CONFIGFILE:=blash.conf}"
+	export CONFIG_FILE="${BLASH_DEFAULT_CONFIGDIR}/${BLASH_DEFAULT_CONFIGFILE}"
+	[[ "${__w:=./}" != './' ]] && echo "Working dir changed to ${__w}"
+	[[ "${__w: -1}" != '/' ]] && __w="${__w//\/\//\/}/"
+	# If a config file is given, we take it first, or look for a default config file
+	if [ -f "$(readlink -m "${1:-}")" ]; then
+		. "${1}"
+		export CONFIG_FILE="${1}"
+	elif [ ${__n:=0} -eq 0 ]; then
+#	elif [ ${__n:=0} -eq 0 -a -f "${__w}${BLASH_DEFAULT_CONFIGFILE}" ]; then
+		if [ -f "${__w}${BLASH_DEFAULT_CONFIGFILE}" ]; then
+			. "${__w}${BLASH_DEFAULT_CONFIGFILE}"
+			export CONFIG_FILE="${__w}${BLASH_DEFAULT_CONFIGFILE}"
+		elif [ -f "${CONFIG_FILE}" ]; then
+			. "${CONFIG_FILE}"
+		fi
+	fi
+}
+
+#
+# config
+#
+config() {
+	# POST_DIR stores all post markdown files
+	export POST_DIR="${POST_DIR:=${__w}post}"
+
+	# OUTPUT_DIR stores all compiled html
+	export OUTPUT_DIR="${OUTPUT_DIR:=${__w}out}"
+
+	# DRAFT_DIR stores all compiled html
+	export DRAFT_DIR="${DRAFT_DIR:=${__w}draft}"
+
+	# LAYOUT_DIR stores all layout markdown files
+	export LAYOUT_DIR="${LAYOUT_DIR:=${__w}themes/default/layout}"
+
+	# PUBLIC_DIR stores css and static images
+	export PUBLIC_DIR="${PUBLIC_DIR:=${__w}themes/default/public}"
+
+	# HIDDEN_DIR stores css and static images
+	export HIDDEN_DIR="${HIDDEN_DIR:=${OUTPUT_DIR}}"
+
+	# site
+	export SITE_NAME="${SITE_NAME:=a blash blog}"
+	export SITE_DESC="${SITE_DESC:=written in bash}"
+	export DISQUS="${DISQUS:=blash}"
+
+	# author
+	export AUTHOR_NAME="${AUTHOR_NAME:=Flyounet}"
+	export AUTHOR_DESC="${AUTHOR_DESC:=a not so interresting man, who also works sometimes.}"
+	export AUTHOR_EMAIL="${AUTHOR_EMAIL:=email@example.org}"
+	export AUTHOR_EMAIL_HASH="${AUTHOR_EMAIL_HASH:=$(md5sum <<< "$AUTHOR_NAME" | awk '{ print $1 }')}"
+	export AUTHOR_TWITTER="${AUTHOR_TWITTER:=twitter}"
+	export AUTHOR_GITHUB="${AUTHOR_GITHUB:=github}"
+	
+	# categories
+	export TAGS_BASELIST="${TAGS_BASELIST:=mylife,internet,blash}"
+	export TAGS_LINK="${TAGS_LINK:=<li><a href='index_==tagNameSlugged==.html' title='jump to tag'><i class='fa fa-tag'></i>&nbsp;==tagName==</a></li>}"
+	export TAGS_LAYOUT="${TAGS_LAYOUT:=index.md}"
+
+	# RSS
+	export RSS_SITE_URL="${RSS_SITE_URL:=http://blash.example.com/alone}"
+
+	# Summary Print, values are all, none, user
+	# when using user the sumprint header tells blash about adding or not the summary
+	export PRINT_ALL_SUMMARY="${PRINT_ALL_SUMMARY:=user}"
+
+	# If you need to add header when creating a new post. Separator is ::
+	export BLASH_EXTRA_HEADER="${BLASH_EXTRA_HEADER:=}"
+
+	# If you want to render a Timeline, you probably want to have a separator for some era.
+	# In my case I usually separate month basis.
+	export BLASH_TIMELINE_COMPARATOR="${BLASH_TIMELINE_COMPARATOR:=+%B %Y}"
+	export BLASH_TIMELINE_RENDERER="${BLASH_TIMELINE_RENDERER:=+%B %Y}"
+
+	# Editor : Defailt Editor will be vim. Update for your pleasure
+	export EDITOR=vim
+}
+
+#
+# helper
+#
+
+# default filename for Blash config file (just the filename no path)
+readonly DEFAULT_CONFIG_FILENAME="${DEFAULT_CONFIG_FILENAME:=blash.conf}"
+
+# absolute dir path of this script
+readonly SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+
+# variable identifier definition
+readonly VAR_ID='[A-Za-z_]+'
+
+# headers prints the header of a markdown file
+headers() {
+	awk '/^---$/ { c++; next } c == 1'
+}
+
+# header prints a specific header value
+header() {
+	headers | sed -e '/^[[:space:]]*'"${1}"'[[:space:]]*:/!d;s/^[[:space:]]*'"${1}"'[[:space:]]*:[[:space:]]*\(.*\)/\1/g'
+}
+
+# body prints the body of a markdown file
+body() {
+	awk '/^---$/ { c++; next } c >= 2'
+}
+
+# slug creates a friendly URL like 'hello-world'
+slug() {
+	iconv -f utf8 -t ascii//TRANSLIT | tr -cs '[:alnum:]\n' - | tr '[:upper:]' '[:lower:]' | sed 's|^-*||;s|-*$||'
+}
+
+#
+# template
+#
+
+# first_block gets the first block location
+first_block() {
+	local c
+	local tag
+	local start
+	local lines
+	local i
+	readarray -t lines
+
+	# counter is used to find the matching @end
+	for (( i=0; i < ${#lines[@]}; i++ )); do
+		case "${lines[i]}" in
+		@if*)
+			if (( c == 0 )); then
+				tag=if
+				start=$((i+1))
+			fi
+			(( c++ ))
+			;;
+		@each*)
+			if (( c == 0 )); then
+				tag=each
+				start=$((i+1))
+			fi
+			(( c++ ))
+			;;
+		@cmd)
+			if (( c == 0 )); then
+				tag=cmd
+				start=$((i+1))
+			fi
+			(( c++ ))
+			;;
+		@end)
+			# @end is found before any starting tag
+			(( c == 0 )) && return 1
+			(( c-- ))
+			if (( c == 0)); then
+				# the matching @end is found, print `tag:start:end`
+				echo "$tag:$start:$((i+1))"
+				return 0
+			fi
+			;;
+		esac
+	done
+}
+
+# find_submatch prints all occurrences of the first submatch
+find_submatch() {
+	local s="$1"
+	while [[ "$s" =~ $2 ]]; do
+		echo "${BASH_REMATCH[1]}"
+		s="${s#*${BASH_REMATCH[0]}}"
+	done
+}
+
+# render_inline handles @include, and evaluates variables
+render_inline() {
+	local lines
+	local line
+	local matches
+	local match
+	readarray -t lines
+	for line in "${lines[@]}"; do
+		if [[ "$line" =~ ^@include\ ($VAR_ID)$ ]]; then
+			# @include renders partial
+			render_file "$LAYOUT_DIR/${BASH_REMATCH[1]}.md"
+		else
+			# evaluate variables
+			readarray -t matches < <(find_submatch "$line" "\{\{ ($VAR_ID) \}\}")
+			for match in "${matches[@]}"; do
+				line="${line//"{{ $match }}"/${!match}}"
+			done
+
+			echo "$line"
+		fi
+	done
+}
+
+# render_if handles @if
+render_if() {
+	local lines
+	local line
+	readarray -t lines
+	# The following regexp should be a little amended to allow more than one space|tab
+	# between the @if and id (AND after)
+	[[ "${lines[0]}" =~ ^@if\ ('!')?($VAR_ID)$ ]] || return 1
+
+	# skip render on undefined_var or !defined_var
+	if [[ "${!BASH_REMATCH[2]}" ]]; then
+		[[ "${BASH_REMATCH[1]}" == '!' ]] && return 0
+	else
+		[[ "${BASH_REMATCH[1]}" == '!' ]] || return 0
+	fi
+	# recursively render the inner block
+	for line in "${lines[@]:1:${#lines[@]}-2}"; do
+		echo "$line"
+	done | render
+}
+
+# render_each handles @each
+render_each() {
+	local lines
+	local line
+	local idx
+	local array
+	local vars
+	local var
+	readarray -t lines
+	[[ "${lines[0]}" =~ ^@each\ ($VAR_ID)$ ]] || return 1
+	for (( idx=0; ; idx++ )); do
+		array="${BASH_REMATCH[1]}_${idx}_"
+		readarray -t vars < <(compgen -v | grep "^$array")
+		(( ${#vars[@]} == 0 )) && break
+
+		# define element in the loop context
+		for var in "${vars[@]}"; do
+			declare "${var#$array}"="${!var}"
+		done
+
+		# recursively render the inner block
+		for line in "${lines[@]:1:${#lines[@]}-2}"; do
+			echo "$line"
+		done | render
+	done
+}
+
+# render_cmd handles @cmd
+render_cmd() {
+	source <(sed '1d; $d')
+}
+
+# render handles general template from stdin
+render() {
+	local input="$(< /dev/stdin)"
+	local tag
+	local start
+	local end
+
+	IFS=: read -r tag start end < <(first_block <<< "$input")
+	if [[ "$tag" ]]; then
+		# render inline before the first block
+		(( start > 1 )) && sed "1,$((start-1))!d" <<< "$input" | render_inline
+
+		# handle first block
+		case "$tag" in
+		if)
+			render_if
+			;;
+		each)
+			render_each
+			;;
+		cmd)
+			render_cmd
+			;;
+		esac < <(sed "$start,$end!d" <<< "$input")
+
+		# recursively handle the rest of the template
+		sed "$((end+1)),\$!d" <<< "$input" | render
+	else
+		# if the first block is not found, just render inline
+		render_inline <<< "$input"
+	fi
+}
+
+# render_file_case uses markdown for posts, and uses render for templates
+render_file_case() {
+	case "$1" in
+	"$POST_DIR"/*)
+		perl -e "${MkDown}"
+		;;
+	"$LAYOUT_DIR"/*)
+		render
+		;;
+	esac < <(body < "$1")
+}
+
+# export_headers reads markdown file headers
+export_headers() {
+	local vars
+	local var
+	readarray -t vars < <(headers < "$1" | cut -d : -f 1)
+	for var in "${vars[@]}"; do
+		# by default, declare is local
+		declare -g "$2$var"="$(header "$var" < "$1")"
+	done
+}
+
+# render_file renders a specific file (with its parent layout) recursively
+render_file() {
+	local content
+	local f="$1"
+	while [[ -f "$f" ]]; do
+		export_headers "$f" ''
+		content="$(render_file_case "$f")"
+
+		f="$LAYOUT_DIR/$(header layout < "$f").md"
+	done
+	echo "$content"
+}
+
+# post_date change the date of a post and the name (unless a future -D is used)
+post_date() {
+	local _fname=''
+	readarray -t posts < <(find "$POST_DIR" -name '*.md' | sort -r)
+	if [ -z "${1:-}" ]; then
+		usage
+	elif [ -z "${1//[0-9]/}" ]; then
+		if [ ${1} -lt ${#posts[@]} ]; then
+			_fname="${posts[${1}]}"
+		fi
+	elif [ -f "${POST_DIR}/${1}" -o -f "${POST_DIR}/${1}.md" ]; then
+		_fname="${POST_DIR}/${1//\.md/}.md"
+	fi
+	if [ -z "${_fname}" ]; then
+		die "This post doesn't exist"
+	fi
+	_pDate="$(header date < "${_fname}")"
+	echo "For post ${_fname}, date has been set to : ${_pDate}"
+	read -i "${_PDate}" -p "Please, enter the new date/time for your post: " _nDate
+	[[ -z "${_nDate}" ]] && die "You wanted to set an empty date. Aborting..."
+	_nDate="$(date -u "+%FT%TZ" --date "${_nDate}" 2>/dev/null)"
+	if [ ${?} -ne 0 ]; then
+		die "Date invalide."
+	else
+		sed -i -e 's;^[[:space:]]*date:[[:space:]]*.*$;date: '"${_nDate}"';g'  "${_fname}"
+	fi
+	if [ ${__D:=0} -eq 0 ]; then
+		mv "${_fname}" "${POST_DIR}/$(sed -e 's;^\([0-9]\{4\}\(-[0-9]\{2\}\)\{2\}-\);'"$(date "+%Y-%m-%d" --date "${_nDate}")"'-;g' <<< "${_fname##*/}")"
+	fi
+}
+
+# post_update change the date of the update field in a post
+post_update() {
+	local _fname=''
+	readarray -t posts < <(find "$POST_DIR" -name '*.md' | sort -r)
+	if [ -z "${1:-}" ]; then
+		usage
+	elif [ -z "${1//[0-9]/}" ]; then
+		if [ ${1} -lt ${#posts[@]} ]; then
+			_fname="${posts[${1}]}"
+		fi
+	elif [ -f "${POST_DIR}/${1}" -o -f "${POST_DIR}/${1}.md" ]; then
+		_fname="${POST_DIR}/${1//\.md/}.md"
+	fi
+	if [ -z "${_fname}" ]; then
+		die "This post doesn't exist"
+	fi
+	sed -i -e 's;^[[:space:]]*update:[[:space:]]*.*$;update: '"$(date -u "+%FT%TZ")"';g'  "${_fname}"
+}
+
+# post_rename parse the headers post to rename the post (usefull if changed the title or the date)
+post_rename() {
+	local _fname=''
+	readarray -t posts < <(find "$POST_DIR" -name '*.md' | sort -r)
+	if [ -z "${1:-}" ]; then
+		usage
+	elif [ -z "${1//[0-9]/}" ]; then
+		[[ ${1} -lt ${#posts[@]} ]] && _fname="${posts[${1}]}"
+	elif [ -f "${POST_DIR}/${1}" -o -f "${POST_DIR}/${1}.md" ]; then
+		_fname="${POST_DIR}/${1//\.md/}.md"
+	fi
+	[[ -z "${_fname}" ]] && die "This post doesn't exist"
+	_pDate="$(header date < "${_fname}")"
+	_pTitle="$(header title < "${_fname}")"
+	_nDate="$(date -u "+%FT%TZ" --date "${_pDate}" 2>/dev/null)"
+	[[ ${?} -ne 0 ]] && die "Date invalide."
+	mv "${_fname}" "${POST_DIR}/$(date -u +%Y-%m-%d --date "${_nDate}")-$(slug <<< "${_pTitle}").md" && \
+		echo "${POST_DIR}/$(date -u +%Y-%m-%d --date "${_nDate}")-$(slug <<< "${_pTitle}").md"
+}
+
+# post_toggle toggles the status of a post (either use ID or post name)
+post_toggle() {
+	local _fname=''
+	if [ -z "${1:-}" ]; then
+		usage
+	elif [ -z "${1//[0-9]/}" ]; then
+		readarray -t posts < <(find "$POST_DIR" -name '*.md' | sort -r)
+		[[ ${1} -lt ${#posts[@]} ]] && _fname="${posts[${1}]}"
+	elif [ -f "${POST_DIR}/${1}" -o -f "${POST_DIR}/${1}.md" ]; then
+		_fname="${POST_DIR}/${1//\.md/}.md"
+	fi
+	[[ -z "${_fname}" ]] && die "This post doesn't exist"
+	if [ "$(header draft < "${_fname}")" == 'false' ]; then
+		sed -i -e 's;^[[:space:]]*draft:[[:space:]]*false[[:space:]]*$;draft: true;g'  "${_fname}"
+	else
+		sed -i -e 's;^[[:space:]]*draft:[[:space:]]*.*[[:space:]]*$;draft: false;g'  "${_fname}"
+	fi
+}
+
+# post_open call the xdg-open for a post (either use ID or post name)
+post_open() {
+	local _fname=''
+	if [ -z "${1:-}" ]; then
+		usage
+	elif [ -z "${1//[0-9]/}" ]; then
+		readarray -t posts < <(find "$POST_DIR" -name '*.md' | sort -r)
+		[[ ${1} -lt ${#posts[@]} ]] && _fname="${posts[${1}]}"
+	elif [ -f "${POST_DIR}/${1}" -o -f "${POST_DIR}/${1}.md" ]; then
+		_fname="${POST_DIR}/${1//\.md/}.md"
+	fi
+	[[ -z "${_fname}" ]] && die "This post doesn't exist"
+	local _hname="${_fname##*/}"; _hname="${DRAFT_DIR}/${_hname%.*}.html"
+	[[ "$(header draft < "${_fname}")" == 'false' ]] && { _hname="${_fname##*/}"; _hname="${OUTPUT_DIR}/${_hname%.*}.html"; }
+	echo "I'll open : ${_hname}"
+	xdg-open "${_hname}"
+}
+
+# post_edit call the EDITOR for a post (either use ID or post name)
+post_edit() {
+	local _fname=''
+	if [ -z "${1:-}" ]; then
+		usage
+	elif [ -z "${1//[0-9]/}" ]; then
+		readarray -t posts < <(find "$POST_DIR" -name '*.md' | sort -r)
+		[[ ${1} -lt ${#posts[@]} ]] && _fname="${posts[${1}]}"
+	elif [ -f "${POST_DIR}/${1}" -o -f "${POST_DIR}/${1}.md" ]; then
+		_fname="${POST_DIR}/${1//\.md/}.md"
+	fi
+	[[ -z "${_fname}" ]] && die "This post doesn't exist"
+	${EDITOR:=vim} "${_fname}"
+}
+
+# post_list list the id title and status of posts
+post_list() {
+	local idx=0
+	[[ ! -d "${POST_DIR}" ]] && die "${POST_DIR} doesn't exit. Aborting..."
+	readarray -t posts < <(find "$POST_DIR" -name '*.md' | sort -r)
+	(
+		echo -e "id title status tag(s)"
+		for post in "${posts[@]}"; do
+			id="$(basename "$post" .md)"
+			local _hidden=''
+			[[ "$(header hidden < "$post")" = 'true' ]] && _hidden=' \e[2m\e[31m/!\ HIDDEN /!\ \e[0m'
+			# skip drafts
+			if [ "$(header draft < "$post")" == 'false' ]; then
+				echo -e "${idx} $id [\e[32mPublished\e[0m] [$(header tags < "$post")]${_hidden}"
+			else
+				echo -e "${idx} $id [\e[31mDraft\e[0m] [$(header tags < "$post")]${_hidden}"
+			fi
+			((idx++))
+		done
+	) | column -t
+}
+
+# post_post creates a post (in the POST_DIR) with the minimum information 
+post_post() {
+	readonly title="${@}"
+	[[ "$title" ]] || usage
+
+	mkdir -p "$POST_DIR" || die "Can't create '$POST_DIR'"
+	readonly post_file="$POST_DIR/$(date +%Y-%m-%d)-$(slug <<< "$title").md"
+	cat > "$post_file" <<-EOF
+	---
+	title: $title
+	date: $(date -u +%FT%TZ)
+	update: 
+	tags: ${TAGS_BASELIST}
+	layout: post
+	draft: true
+	hidden: false
+	sumprint: 
+	summary: 
+	---
+	EOF
+	[[ ! -z "${BLASH_EXTRA_HEADER}" ]] && sed -i -e 's/^\(summary:[[:space:]]*\)$/'"${BLASH_EXTRA_HEADER}::"'\1/g' -e $'s/::/\\n/g' "$post_file"
+	echo "$post_file"
+	[[ "$EDITOR" ]] && ${EDITOR:=vim} "$post_file"
+}
+
+# post_infos Print informations on configuration
+post_infos() {
+#	[[ ! -z "${CONFIG_FILE:=}" && -f "${CONFIG_FILE:=}" ]] && 
+	cat <<-EOFF
+	Working directory	: ${__w}
+	Configuration file	: ${CONFIG_FILE}
+
+	Post directory		: ${POST_DIR}
+	Layout directory	: ${LAYOUT_DIR}
+	Public directory	: ${PUBLIC_DIR}
+
+	Output directory	: ${OUTPUT_DIR}
+	Draft directory		: ${DRAFT_DIR}
+	Hidden directory	: ${HIDDEN_DIR}
+
+	Site name		: ${SITE_NAME}
+	Site Description	: ${SITE_DESC}
+	RSS Url			: ${RSS_SITE_URL}
+
+	Author name		: ${AUTHOR_NAME}
+	Author description	: ${AUTHOR_DESC}
+	Author Email		: ${AUTHOR_EMAIL}
+	Author Email hash	: ${AUTHOR_EMAIL_HASH}
+	Author Github name	: ${AUTHOR_GITHUB}
+	Author Twitter name	: ${AUTHOR_TWITTER}
+
+	Disqus name		: ${DISQUS}
+
+	Tags default list	: ${TAGS_BASELIST}
+	Tags Link		: ${TAGS_LINK}
+	Tags Layout		: ${TAGS_LAYOUT}
+
+	Summary to print	: ${PRINT_ALL_SUMMARY}
+
+	Extra Header(s)		: ${BLASH_EXTRA_HEADER}
+
+	Timeline Date Compare	: ${BLASH_TIMELINE_COMPARATOR}
+	Timeline Date Renderer	: ${BLASH_TIMELINE_RENDERER}
+
+	Editor			: ${EDITOR}
+	EOFF
+}
+
+# post_bake it's where the magic start
+post_bake() {
+	[[ -z "${MkDown:=}" ]] && export MkDown="$(awk '/^BINARY MkDown$/ { c++; next } c == 1' "$(command -v "${0}")" | base64 -d | gzip -dc)" && \
+	[[ "$(md5sum -b <<< "${MkDown}" | cut -d ' ' -f1)" != 'c1609b303b7fe654435380a168d78acf' ]] && die 'Embedded Markdown is corrupted !'
+
+	rm -rf "$DRAFT_DIR" "$OUTPUT_DIR"
+	mkdir -p "$DRAFT_DIR" "$OUTPUT_DIR"
+
+	[[ -d "$POST_DIR" ]] || usage
+	[[ -d "$PUBLIC_DIR" ]] && cp -r "$PUBLIC_DIR"/. "$OUTPUT_DIR"
+	[[ -d "$PUBLIC_DIR" ]] && cp -r "$PUBLIC_DIR"/. "$DRAFT_DIR"
+	touch "$DRAFT_DIR/index.html"
+
+	if [ ${__X:=0} -eq 0 ]; then
+		export ATOM_DATE="$(date -u +%FT%TZ)"
+		export ATOM_TAG="${RSS_SITE_URL#*//}"; ATOM_TAG="${ATOM_TAG%%/*}"
+	fi
+
+	readarray -t posts < <(find "$POST_DIR" -name '*.md' | sort -r)
+	echo "Rendering Posts..." >&2
+	idx=0
+	id_all=0
+	_allTags=''
+	for post in "${posts[@]}"; do
+		[[ ${id_all} -eq 0 ]] && echo -e "id\t- Title\t[Tags]"
+		idx_prev=1;idx_next=1
+		id="$(basename "$post" .md)"
+		# skip drafts
+		if [ "$(header draft < "$post")" != false ]; then
+			(( id_all++ ))
+			POST_PREV='index.html';POST_NEXT='index.html';
+			render_file "$post" > "$DRAFT_DIR/$id.html" &
+			continue
+		fi
+		if [ ${__z:=0} -eq 0 -a "$(header hidden < "$post")" = true ]; then
+			(( id_all++ ))
+			POST_PREV='index.html';POST_NEXT='index.html';
+			render_file "$post" > "$HIDDEN_DIR/$id.html" &
+			echo -e "${idx}\t- ${id}\t[${tags}] <--- HIDDEN"
+			continue
+		fi
+		if [ ${idx} -eq 0 ]; then # It's the first post, so the newer one is index
+			id_prev=0
+		else # search for the previous post not draft
+			while [ -f "${posts[$((id_all-idx_prev))]}" -a "$(header draft < "${posts[$((id_all-idx_prev))]}" 2>/dev/null)" != false ]; do
+				(( idx_prev++ ))
+				if [ ${idx_prev} -gt ${id_all} ]; then idx_prev=${id_all}; break; fi
+			done 2>/dev/null
+		fi
+		# look for the next older post not draft
+		while [ -f "${posts[$((id_all+idx_next))]}" -a "$(header draft < "${posts[$((id_all+idx_next))]}" 2>/dev/null)" != false ]; do
+			(( idx_next++ ))
+		done 2>/dev/null
+
+		if [ ${idx} -eq 0 -o $((idx_all-idx_prev)) -eq 0 -a ${id_all} -eq 0 ]; then
+			POST_PREV="index.html"
+			declare -g "posts_${idx}_NEWSECTION"=true; declare -g "posts_${idx}_NEWDATE"=true;  declare -g "posts_${idx}_newdate"="$(date --date="$(header date < "$post" | tr "TZ" "  ")" "${BLASH_TIMELINE_RENDERER}")";
+		else
+			POST_PREV="$( basename "${posts[$((id_all-idx_prev))]}" )"
+			POST_PREV="${POST_PREV%*.md}.html"
+			unset NEWSECTION; unset NEWDATE
+			declare -g "posts_${idx}_NEWSECTION"=''; declare -g "posts_${idx}_NEWDATE"=''
+			[[ ${idx} -eq 0 || "$(date --date="$(header date < "$post" | tr "TZ" "  ")" "${BLASH_TIMELINE_COMPARATOR}")" != "$(date --date="$(header date < "${posts[$((id_all-idx_prev))]}" | tr "TZ" "  ")" "${BLASH_TIMELINE_COMPARATOR}")" ]] && { declare -g "posts_${idx}_NEWSECTION"=true; declare -g "posts_${idx}_NEWDATE"=true;  declare -g "posts_${idx}_newdate"="$(date --date="$(header date < "$post" | tr "TZ" "  ")" "${BLASH_TIMELINE_RENDERER}")";}
+		fi
+		POST_NEXT="$( basename "${posts[$((id_all+idx_next))]}" )"
+		[[ -z "${POST_PREV:=}" ]] && POST_PREV='index.html'
+		[[ -z "${POST_NEXT:=}" ]] && POST_NEXT='index.md'
+		unset NEWENDSECTION;
+		declare -g "posts_${idx}_NEWENDSECTION"=''
+		[[ $((id_all+idx_next)) -eq ${#posts[@]} || "$(date --date="$(header date < "$post" | tr "TZ" "  ")" "${BLASH_TIMELINE_COMPARATOR}")" != "$(date --date="$(header date < "${posts[$((id_all+idx_next))]}" | tr "TZ" "  ")" "${BLASH_TIMELINE_COMPARATOR}")" ]] && declare -g "posts_${idx}_NEWENDSECTION"=true
+		POST_NEXT="${POST_NEXT%*.md}.html"
+		# look for the tags
+		if [ ${__t:=0} -eq 0 ]; then # When implemented the -c will avoid tags generation
+			local _tag=''; TAGSLIST=''
+			tags="$(header tags < "$post")"
+			if [ ! -z "${tags}" ]; then
+				while read _tag; do
+					TAGSLIST="${TAGSLIST}${TAGS_LINK//==tagNameSlugged==/$(slug <<< "${_tag}")}"
+					TAGSLIST="${TAGSLIST//==tagName==/${_tag}}"
+					_allTags="${_allTags//${_tag},/}${_tag},"
+				done <<< "$(echo -e "${tags//,/\\n}")"
+			fi
+		else
+			unset TAGSLIST
+			unset tags
+		fi
+		# Manage summary
+		if [ "${PRINT_ALL_SUMMARY}" = 'all' -o "$(header sumprint < "${post}")" = 'true' -a "${PRINT_ALL_SUMMARY}" = 'user' ]; then
+			declare -g SUMMARYPARSED="$(perl -e "${MkDown}" <<< "$(header summary < "${post}")")"
+			export PRINTSUMMARY=true
+		else
+			unset PRINTSUMMARY
+		fi
+		# Render the post
+		echo -e "${idx}\t- ${id}\t[${tags}]"
+		render_file "$post" > "$OUTPUT_DIR/$id.html" &
+		declare "posts_${idx}_id"="$id"
+		if [ ${__x:=0} -eq 0 ]; then # RSS datetime has to be RFC 822 compliant
+			declare -g "posts_${idx}_rssdate"="$(date -R --date "$(header date < "$post")")"
+		fi
+		if [ ${__X:=0} -eq 0 ]; then # Atom datetime has to be RFC 822 compliant
+			local _atomd="$(header date < "$post")"
+			declare -g "posts_${idx}_atomdate"="${_atomd}"
+			declare -g "posts_${idx}_atomtag"="${ATOM_TAG},${_atomd%%-*}"
+		fi
+		export_headers "$post" "posts_${idx}_"
+		local lesum="posts_${idx}_summary";[[ ! -z "${!lesum}" ]] && declare -g "posts_${idx}_summary"="$(perl -e "${MkDown}" <<< "$(header summary < "${post}")")"
+		POST_PREV="$id.html"
+		(( id_all++ ))
+		(( idx++ ))
+	done
+	if [ ${__x:=0} -eq 0 ]; then
+		echo "Rendering RSS" >&2
+		RSS_DATE="$(date -R)"
+		render_file "$LAYOUT_DIR/rss.md" > "$OUTPUT_DIR/rss.xml" &
+		wait
+	fi
+	if [ ${__X:=0} -eq 0 ]; then
+		echo "Rendering Atom" >&2
+		export ATOM_TAG="${ATOM_TAG},${ATOM_DATE%%-*}"
+		render_file "$LAYOUT_DIR/atom.md" > "$OUTPUT_DIR/atom.xml" &
+		wait
+	fi
+	echo "Rendering Index..." >&2
+	export GENERATE_INDEX=true
+	render_file "$LAYOUT_DIR/index.md" > "$OUTPUT_DIR/index.html" &
+	wait
+	unset GENERATE_INDEX
+	# Generate the indexes for each tags
+	if [ ${__t:=0} -eq 0 ]; then
+		echo "Rendering Index for categories..." >&2
+		export GENERATE_TAGS=true
+		while read _tagIdx; do
+			# It's really important to unset all posts variables
+			while read a; do unset "${a}"; done <<< "$(compgen  -v | grep -E "^posts_[0-9]")"
+			idx=0
+			id_all=0
+			for post in "${posts[@]}"; do
+				id="$(basename "$post" .md)"
+				if [ "$(header draft < "$post")" != false ]; then continue; fi
+				tags="$(header tags < "$post")"
+				if [ ! -z "${tags}" ]; then
+					while read _tag; do
+						if [ "${_tag}" = "${_tagIdx}" ] ; then
+							declare "posts_${idx}_id"="$id"
+							export_headers "$post" "posts_${idx}_"
+							local lesum="posts_${idx}_summary";[[ ! -z "${!lesum}" ]] && declare -g "posts_${idx}_summary"="$(perl -e "${MkDown}" <<< "$(header summary < "${post}")")"
+							(( idx++ ))
+						fi
+					done <<< "$(echo -e "${tags//,/\\n}")"
+				fi
+			done
+			render_file "$LAYOUT_DIR/${TAGS_LAYOUT}" > "$OUTPUT_DIR/index_$(slug <<< "${_tagIdx}").html" &
+			wait
+		done <<< "$(echo -e "${_allTags//,/\\n}")"
+	fi
+	echo 'Blashed !' >&2
+}
+
+# die print message to stderr and exit
+die() {
+	echo -e "${@}" >&2
+	exit 1
+}
+
+#
+# usage
+#
+usage() {
+	cat <<-EOF
+	### This special version has 2 flavours, the old one : 
+	blash 
+	  post   [title] draft a post 
+	  bake           ship all posts 
+	  list           list all posts with state
+	  toggle [post]  toggle the draft status of a post
+	  date   [title] change the date of a post
+	  rename [title] parse the header to re-generate the filename of a post
+	### And the new one :
+	blash [-p <title>|-b [-t][-x][-X][-z]|-l|-s <title|id>|-d <title|id> [-D]|-e <title|id>|-r <title|id>|-u <title|id>] [-f <filename>] [-w <path>] [-I] [-h] [-v]
+	  -b            ship all posts
+	  -d [title|id] change the date of a post
+	  -D            don't change the filename when changing date
+	  -e [title|id] edit your post (\$EDITOR used to call your editor)
+	  -f [file]     get the configuration from a file
+	  -h            print help (you currently read it)
+	  -I		print informations on configuration
+	  -l            list all posts with state
+	  -n            No default config file loaded BLASH_CONFIG
+	  -o [title|id] open the page (using xdg-open)
+	  -p "[title]"  draft a post
+	  -r [title|id] parse a post content to re-generate the filename
+	  -s [title|id] toggle the draft status of a post
+	  -S <all|none|user> Override the PRINT_ALL_SUMMARY variable
+	  -t            don't generate tags
+	  -u [title|id] Change the date of the field update in a post
+	  -v            print version
+	  -w [path]     use this path to work instead of ./
+	  -x            don't generate the RSS feed file
+	  -X            don't generate the Atom feed file
+	  -z            don't generate hidden Post
+	EOF
+	exit 1
+}
+
+# checkBinaries check the script is able to run and give hints
+checkBinaries() {
+	local cmdErr="perl sed awk cat basename find date iconv tr dirname readlink column gzip base64 cut"
+	set ${cmdErr}
+	while [ ${#} -ne 0 ]; do
+		if ! command -v "${1:-}" &>/dev/null; then
+			echo "command not found: ${1}" >&2
+			local rc=1
+		fi
+		shift
+	done
+	[[ ${rc:=0} -ne 0 ]] && die "At least one command is missing. Please install it before using Blash"
+}
+
+###############################################################################
+# MAIN PART
+###############################################################################
+
+# Before going further let's verify all binaries required are present
+checkBinaries
+# Let's help people
+(( $# == 0 )) && usage
+
+
+_regex='^(post|bake|list|toggle|date|rename)$'
+if [[ ${1:-} =~ ${_regex} ]]; then
+	case "$1" in
+		bake) __b=1 ;;
+		post) __p=1; __post="${@:2}" ;;
+		list) __l=1;;
+		toggle) __t=1; __post="${@:2}" ;;
+		date) __d=1; __post="${@:2}" ;;
+		rename) __r=1; __post="${@:2}" ;;
+		*) usage ;;
+	esac
+else
+	# used      : ---b--Dd-e-f--HhI------l---n-o-p---rSs-t---v-wXx---z----------
+	# available : AaB-Cc--E-F-Gg---iJjKkL-MmN-O-P-QqR---T-UuV-W---YyZ-0123456789
+	while getopts ":d:e:f:o:p:r:s:u:S:w:bDhHIlntvxXz" option; do
+		case ${option} in
+			b) __b=1;;
+			d) __d=1;__post="${OPTARG}";;
+			D) __D=1;;
+			I) __I=1;;
+			l) __l=1;;
+			e) __e=1;__post="${OPTARG}";;
+			f) __f="${OPTARG}";;
+			n) __n=1;;
+			o) __o=1;__post="${OPTARG}";;
+			p) __p=1;__post="${OPTARG}";;
+			r) __r=1;__post="${OPTARG}";;
+			s) __s=1;__post="${OPTARG}";;
+			S) [[ "${OPTARG,,}" =~ ^(user|all|none)$ ]] || die "Argument '${OPTARG}' unknown."; export PRINT_ALL_SUMMARY="${OPTARG,,}";;
+			t) __t=1;;
+			u) __u=1;__post="${OPTARG}";;
+			v) echo -e "${0} v${VERSION} [$Format:%h$]\nblash © Flyounet(2015-2016)\n" ; exit 0;;
+			w) [[ -d "${OPTARG}" ]] && __w="$( cd ${OPTARG}; pwd)/";;
+			x) __x=1;;
+			X) __X=1;;
+			z) __z=1;;
+			?|H|h) usage; exit 0;;
+			*) echo "Argument unknown" >&2; usage;;
+		esac
+	done
+fi
+
+if [ $(( ${__b:=0} + ${__d:=0} + ${__e:=0} + ${__l:=0} + ${__o:=0} + ${__p:=0} + ${__r:=0} + ${__s:=0} + ${__I:=0} + ${__u:=0} )) -gt 1 ]; then
+	echo "You have to choose between -b, -d, -e, -I, -l, -o, -p, -r, -s, -u" >&2
+	usage
+elif [ $(( ${__b:=0} + ${__d:=0} + ${__e:=0} + ${__l:=0} + ${__o:=0} + ${__p:=0} + ${__r:=0} + ${__s:=0} + ${__I:=0} + ${__u:=0} )) -lt 1 ]; then
+	echo "Nothing to do ?" >&2
+	usage
+fi
+if [ ! -z "${__w:=}" -a ! -d "${__w}" ]; then
+	echo "Working directory doesn't exist !" >&2
+	usage
+fi
+config "${__f:=}"
+
+readonly POST_DIR; readonly OUTPUT_DIR; readonly DRAFT_DIR; readonly LAYOUT_DIR; readonly PUBLIC_DIR
+readonly SITE_NAME; readonly SITE_DESC
+readonly AUTHOR_NAME; readonly AUTHOR_DESC; readonly AUTHOR_EMAIL; readonly AUTHOR_EMAIL_HASH;
+readonly AUTHOR_TWITTER; readonly AUTHOR_GITHUB; readonly DISQUS
+readonly TAGS_LINK; readonly TAGS_BASELINK
+
+
+if [ ${__b} -eq 1 ]; then
+	post_bake
+elif [ ${__l} -eq 1 ]; then
+	post_list
+elif [ ${__d} -eq 1 ]; then
+	post_date "${__post}"
+elif [ ${__e} -eq 1 ]; then
+	post_edit "${__post}"
+elif [ ${__p} -eq 1 ]; then
+	post_post "${__post}"
+elif [ ${__r} -eq 1 ]; then
+	post_rename "${__post}"
+elif [ ${__s} -eq 1 ]; then
+	post_toggle "${__post}"
+elif [ ${__I} -eq 1 ]; then
+	post_infos
+elif [ ${__o} -eq 1 ]; then
+	post_open "${__post}"
+elif [ ${__u} -eq 1 ]; then
+	post_update "${__post}"
+else
+	die "Warp  Zone : Mario was here"
+fi
+exit 0
+
+# Following Binary Markdown.pl (md5sum: c1609b303b7fe654435380a168d78acf) included with : echo 'BINARY MkDown' >> blash && gzip -9 -c Markdown.pl | base64 -w 0 >> blash
+BINARY MkDown
+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

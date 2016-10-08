@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0">
+	<channel>
+		<generator>Baker: static blog generator in bash</generator>
+		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
+		<title><![CDATA[ A Timeline bakered with <3 ]]></title>
+		<link>http://flyounet.net/baker-example/</link>
+		<description><![CDATA[ written in bash (and perl for the Markdown to HTML transformation) ]]></description>
+		<pubDate>Sat, 23 Apr 2016 23:52:23 +0200</pubDate>
+		<item>
+			<title><![CDATA[ Timeline : Where we are ? ]]></title>
+			<link>http://flyounet.net/baker-example//2016-04-20-timeline-where-we-are.html</link>
+			<guid>http://flyounet.net/baker-example//2016-04-20-timeline-where-we-are.html</guid>
+			<description><![CDATA[ <p>After some month of work (some hours only in reality), I would say : it works ! It's not the ugliest Timeline, you'll find (but it's not the prettiest).</p> ]]></description>
+			<pubDate>Wed, 20 Apr 2016 09:07:08 +0200</pubDate>
+		</item>
+		<item>
+			<title><![CDATA[ A last one for this 1st month ]]></title>
+			<link>http://flyounet.net/baker-example//2016-01-27-a-last-one-for-this-1st-month.html</link>
+			<guid>http://flyounet.net/baker-example//2016-01-27-a-last-one-for-this-1st-month.html</guid>
+			<description><![CDATA[ <p>It almost works !</p> ]]></description>
+			<pubDate>Wed, 27 Jan 2016 13:13:45 +0100</pubDate>
+		</item>
+		<item>
+			<title><![CDATA[ A last one ]]></title>
+			<link>http://flyounet.net/baker-example//2016-01-20-a-last-one.html</link>
+			<guid>http://flyounet.net/baker-example//2016-01-20-a-last-one.html</guid>
+			<description><![CDATA[  ]]></description>
+			<pubDate>Wed, 20 Jan 2016 10:07:49 +0100</pubDate>
+		</item>
+		<item>
+			<title><![CDATA[ If you think I'll not try to create a third post... ]]></title>
+			<link>http://flyounet.net/baker-example//2016-01-01-if-you-think-i-ll-not-try-to-create-a-third-post.html</link>
+			<guid>http://flyounet.net/baker-example//2016-01-01-if-you-think-i-ll-not-try-to-create-a-third-post.html</guid>
+			<description><![CDATA[ <p>Because my Internet connection collapsed...</p> ]]></description>
+			<pubDate>Fri, 01 Jan 2016 07:59:12 +0100</pubDate>
+		</item>
+		<item>
+			<title><![CDATA[ 2nd entry ]]></title>
+			<link>http://flyounet.net/baker-example//2015-12-31-2nd-entry.html</link>
+			<guid>http://flyounet.net/baker-example//2015-12-31-2nd-entry.html</guid>
+			<description><![CDATA[ <p>Not a lot to say</p> ]]></description>
+			<pubDate>Fri, 01 Jan 2016 00:45:56 +0100</pubDate>
+		</item>
+		<item>
+			<title><![CDATA[ 1st entry ]]></title>
+			<link>http://flyounet.net/baker-example//2015-12-25-1st-entry.html</link>
+			<guid>http://flyounet.net/baker-example//2015-12-25-1st-entry.html</guid>
+			<description><![CDATA[ <p>As a first post, I would say : <em>Thanks to the original author of Baker</em> !</p> ]]></description>
+			<pubDate>Fri, 25 Dec 2015 02:02:03 +0100</pubDate>
+		</item>
+	</channel>
+</rss>

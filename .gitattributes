@@ -1,0 +1,5 @@
+.gitattributes export-ignore  
+.gitignore export-ignore
+testing/ export-ignore
+
+* ident export-subst

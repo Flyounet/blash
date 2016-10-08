@@ -1,0 +1,343 @@
+/*
+ Please note, this CSS is entirely not finished.
+ I took a lot of inspiration from Baker (and Bootstrap).
+*/
+
+@media (min-width: 800px) {
+ .container { max-width: 1200px; }
+.post-date {
+ font-size: 1.2em;
+}
+.post-date time {
+ font-size: 1.5em;
+}
+.col-md-5, .col-md-2 {
+ float: left;
+ margin-left: 2.5em;
+ margin-right: 3.5em;
+}
+}
+
+@media (max-width: 1024px) {
+ .container { max-width: 900px; }
+.post-date {
+ font-size: 0.9em;
+}
+.post-date time {
+ font-size: 1.1em;
+}
+.col-md-5, .col-md-2 {
+ float: left;
+ margin-left: 0.5em;
+ margin-right: 1.5em;
+}
+}
+* {
+ font-family: "Courier New",Courier,mono;
+/* background-color: black !important; */
+ color: rgb(160, 160, 160);
+}
+body {
+ font-size: 14px;
+ line-height: 1.42857;
+}
+main {
+ margin: 1em;
+}
+.container {
+ width: 1170px;
+}
+.container {
+ padding-right: 15px;
+ padding-left: 15px;
+ margin-right: auto;
+ margin-left: auto;
+}
+header {
+ margin-top: 2em;
+ margin-bottom: 1em;
+ padding-bottom: 1em;
+ border-bottom: 1px solid #337AB7;
+}
+
+header > h1 {
+ text-decoration: none;
+}
+
+nav {
+ font-size: 1.2em;
+}
+aside {
+ font-size: 0.8em;
+}
+nav a, aside a {
+ border: 1px solid #101010 ;
+ text-decoration: none;
+ color: #337AB7;
+/* border: 1px solid #337AB7 !important; */
+}
+nav .fa, aside .fa {
+ position: static !important;
+/* text-decoration: none;*/
+ color: #337AB7;
+font-size: 1em;
+}
+.active {
+ border: 1px solid #337AB7 !important;
+}
+nav a:hover .fa, aside a:hover .fa {
+ background-color: #337AB7 !important;
+ color: inherit;
+}
+
+nav a:hover, aside a:hover {
+ background-color: #337AB7 !important;
+ border: 1px solid #337AB7 !important;
+ color: inherit;
+}
+nav li {
+ border-radius: 4px; 
+ background-color: #337AB7 !important;
+}
+.pull-right {
+    float: right !important;
+margin-top: 0px !important;
+}
+.nav-pills > li { float: left;
+}
+.nav-pills > li > a { border-radius: 4px; 
+}
+nav {
+    font-size: 1.2em;
+line-height: 1.42857;
+}
+.nav > li {
+    position: relative;
+    display: block;
+}
+.nav {
+    padding-left: 0px;
+    margin-bottom: 0px;
+    list-style: outside none none;
+}
+.nav > li > a {
+    position: relative;
+    display: block;
+    padding: 10px 15px;
+}
+
+.category > li {
+ border: 1px solid #337AB7 !important;
+ float: left;
+ color: inherit;
+}
+.category > li > a { border-radius: 4px; }
+
+aside {
+ text-align: right;
+margin-bottom:0px;
+margin-top:1em;
+}
+aside ul {
+ list-style: outside none none;
+}
+aside li {
+/*    padding: 5px 10px;*/
+ position: relative;
+ display: inline;
+}
+aside a {
+    padding: 5px 10px;
+ border: 1px solid #101010 !important;
+ border-radius: 4px; 
+/*    margin: 10px 15px;*/
+}
+footer {
+ margin-top: 2em;
+ margin-bottom: 2em;
+ padding-top: 1em;
+ border-top: 1px solid #337AB7;
+}
+.flexouille {
+ display: flex;
+ flex-flow: row wrap;
+ justify-content: space-between;
+align-items: stretch;
+}
+.flexouille section {
+flex: 1 1;
+/* border: 1px #fff solid; */
+margin: 0;
+}
+.flexouille nav {
+ display: flex;
+ flex-direction: column;
+}
+article, aside, details, figcaption, figure, footer, header, hgroup, main, menu, nav, section, summary {
+    display: block;
+}
+article a:link {
+ text-decoration: none;
+ color: #337AB7;
+}
+article a:visited {
+ color: #B7337A !important;
+}
+article a:hover {
+ color: #559CD9 !important;
+ text-decoration: underline;
+ text-decoration-style: wavy;
+}
+.h1, h1 {
+    font-size: 36px;
+}
+.h1, .h2, .h3, h1, h2, h3 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+.h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
+    font-family: inherit;
+    font-weight: 500;
+    line-height: 1.1;
+    color: inherit;
+}
+h1 {
+    margin: 0.67em 0px;
+}
+pre {
+margin: 1em;
+padding: 0.2em 0.9em;
+border: 1px solid;
+border-radius: 14px;
+background-color: #222222 !important;
+}
+code, pre * {
+background-color: #222222 !important;
+}
+article > blockquote, li > blockquote { 
+margin: 0.5em 1em ; 
+padding: 0.5em 1em;
+font-size: 1.2em;
+border-radius: 14px;
+ }
+blockquote, blockquote * {
+background-color: #222222 !important;
+font-style: italic;
+}
+article hr {
+ color: #337AB7;
+}
+
+
+h1, h2, h3, h4, h5, h6 {
+text-decoration: underline;
+text-decoration-style: wavy;
+text-decoration-color: #101010;
+-moz-text-decoration-style: wavy;
+}
+
+
+/* TIMELINE RELATED RULES */
+
+.timeline h2, .timeline h3 { font-weight: 300; }
+
+.container { padding: 1em; }
+
+.timeline {
+  position: relative;
+  overflow: auto;
+}
+.timeline:before {
+  content: '';
+  position: absolute;
+  height: 100%;
+  width: 5px;
+  left: 0;
+}
+.timeline h2 {
+ font-variant: small-caps;
+  max-width: 6em;
+  margin: 0 auto 1em;
+  padding: 0.5em;
+  text-align: center;
+  position: relative;
+  clear: both;
+}
+.timeline section {
+  list-style: none;
+  padding: 0 0 0 1em;
+  z-index: 1;
+}
+.timeline article {
+  padding: 1em;
+  margin-bottom: 1em;
+  position: relative;
+}
+.timeline article:before {
+  content: '';
+  width: 0;
+  height: 0;
+  border-left: 1em solid transparent;
+  position: absolute;
+  left: -1em;
+  top: 0;
+}
+.timeline h3 { margin-top: 0; }
+.timeline time { font-style: italic; }
+
+@media screen and (min-width: 40em) {
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .timeline:before { left: 50%; }
+  .timeline section {
+    padding-left: 0;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .timeline article { width: 42%; }
+  .timeline article:nth-child(even) {
+    float: right;
+    margin-top: 2em;
+  }
+  .timeline article:nth-child(odd) { float: left; }
+  .timeline article:nth-child(odd):before {
+    border-right: 1em solid transparent;
+    right: -1em;
+    left: auto;
+  }
+  .timeline article:nth-of-type(2n+1) { clear: both; }
+}
+
+/* Positionnal Modifiers for article */
+.timeline article.fardown { margin-top: 5em; }
+.timeline article.farup { margin-top: -5em; }
+/* Background Color */
+html { background-color: #303030; }
+/* Blue Color : Default */
+.timeline:before, .timeline h2, .timeline article, .timeline article:nth-child(even) { background: #337AB7; }
+.timeline article:before, .timeline article:nth-child(odd):before { border-top: 1em solid #337AB7; }
+.timeline * { color: #000; }
+.timeline a, .timeline a:link, .timeline a:visited, .timeline a:hover { color: #303030;
+text-decoration: underline;
+text-decoration-style: wavy;
+text-decoration-color: #101010;
+-moz-text-decoration-style: wavy;
+}
+
+/* Color red */
+.timeline.cred:before, .timeline h2.cred, .timeline article.cred, .timeline article.cred:nth-child(even) { background: #FF0040 !important; }
+.timeline article.cred:before, .timeline article.cred:nth-child(odd):before { border-top: 1em solid #FF0040 !important; }
+/* Color green */
+.timeline.cgreen:before, .timeline h2.cgreen, .timeline article.cgreen, .timeline article.cgreen:nth-child(even) { background: #00FF40 !important; }
+.timeline article.cgreen:before, .timeline article.cgreen:nth-child(odd):before { border-top: 1em solid #00FF40 !important; }
+/* Color yellow */
+.timeline.cyellow:before, .timeline h2.cyellow, .timeline article.cyellow, .timeline article.cyellow:nth-child(even) { background: #FFFF40 !important; }
+.timeline article.cyellow:before, .timeline article.cyellow:nth-child(odd):before { border-top: 1em solid #FFFF40 !important; }
+/* Color orange */
+.timeline.corange:before, .timeline h2.corange, .timeline article.corange, .timeline article.corange:nth-child(even) { background: #FF8000 !important; }
+.timeline article.corange:before, .timeline article.corange:nth-child(odd):before { border-top: 1em solid #FF8000 !important; }
+
+

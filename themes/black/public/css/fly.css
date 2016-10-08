@@ -1,0 +1,255 @@
+/*
+ Please note, this CSS is entirely not finished.
+ I took a lot of inspiration from Baker (and Bootstrap).
+*/
+
+@media (min-width: 800px) {
+ .container { max-width: 1200px; }
+.post-date {
+ font-size: 1.2em;
+}
+.post-date time {
+ font-size: 1.5em;
+}
+.col-md-5, .col-md-2 {
+ float: left;
+ margin-left: 2.5em;
+ margin-right: 3.5em;
+}
+}
+
+@media (max-width: 1024px) {
+ .container { max-width: 900px; }
+.post-date {
+ font-size: 0.9em;
+}
+.post-date time {
+ font-size: 1.1em;
+}
+.col-md-5, .col-md-2 {
+ float: left;
+ margin-left: 0.5em;
+ margin-right: 1.5em;
+}
+}
+* {
+ font-family: "Courier New",Courier,mono;
+ background-color: black !important;
+ color: rgb(160, 160, 160);
+}
+body {
+ font-size: 14px;
+ line-height: 1.42857;
+}
+main {
+ margin: 1em;
+}
+.container {
+ width: 1170px;
+}
+.container {
+ padding-right: 15px;
+ padding-left: 15px;
+ margin-right: auto;
+ margin-left: auto;
+}
+header {
+ margin-top: 2em;
+ margin-bottom: 1em;
+ padding-bottom: 1em;
+ border-bottom: 1px solid #337AB7;
+}
+
+header > h1 {
+ text-decoration: none;
+}
+
+nav {
+ font-size: 1.2em;
+}
+aside {
+ font-size: 0.8em;
+}
+nav a, aside a {
+ border: 1px solid #101010 ;
+ text-decoration: none;
+ color: #337AB7;
+/* border: 1px solid #337AB7 !important; */
+}
+nav .fa, aside .fa {
+ position: static !important;
+/* text-decoration: none;*/
+ color: #337AB7;
+font-size: 1em;
+}
+.active {
+ border: 1px solid #337AB7 !important;
+}
+nav a:hover .fa, aside a:hover .fa {
+ background-color: #337AB7 !important;
+ color: inherit;
+}
+/*
+i, i .fa-li, i .fa {
+ margin: -5px;
+ padding: -5px;
+ position: static !important;
+
+}
+*/
+/*
+nav .fa-li * {
+ margin: 0px;
+ padding: 0px;
+ position: fixed !important;
+} */
+/* position: static !important;*/
+
+nav a:hover, aside a:hover {
+ background-color: #337AB7 !important;
+ border: 1px solid #337AB7 !important;
+ color: inherit;
+}
+nav li {
+ border-radius: 4px; 
+ background-color: #337AB7 !important;
+}
+.pull-right {
+    float: right !important;
+margin-top: 0px !important;
+}
+.nav-pills > li { float: left;
+}
+.nav-pills > li > a { border-radius: 4px; 
+}
+nav {
+    font-size: 1.2em;
+line-height: 1.42857;
+}
+.nav > li {
+    position: relative;
+    display: block;
+}
+.nav {
+    padding-left: 0px;
+    margin-bottom: 0px;
+    list-style: outside none none;
+}
+.nav > li > a {
+    position: relative;
+    display: block;
+    padding: 10px 15px;
+}
+
+.category > li {
+ border: 1px solid #337AB7 !important;
+ float: left;
+ color: inherit;
+}
+.category > li > a { border-radius: 4px; }
+
+aside {
+ text-align: right;
+margin-bottom:0px;
+margin-top:1em;
+}
+aside ul {
+ list-style: outside none none;
+}
+aside li {
+/*    padding: 5px 10px;*/
+ position: relative;
+ display: inline;
+}
+aside a {
+    padding: 5px 10px;
+ border: 1px solid #101010 !important;
+ border-radius: 4px; 
+/*    margin: 10px 15px;*/
+}
+footer {
+ margin-top: 2em;
+ margin-bottom: 2em;
+ padding-top: 1em;
+ border-top: 1px solid #337AB7;
+}
+footer ul {
+ clear: both;
+ display: inline;
+}
+article, aside, details, figcaption, figure, footer, header, hgroup, main, menu, nav, section, summary {
+    display: block;
+}
+article a:link {
+ text-decoration: none;
+ color: #337AB7;
+}
+article a:visited {
+ color: #B7337A !important;
+}
+article a:hover {
+ color: #559CD9 !important;
+ text-decoration: underline;
+ text-decoration-style: wavy;
+}
+.h1, h1 {
+    font-size: 36px;
+}
+.h1, .h2, .h3, h1, h2, h3 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+.h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
+    font-family: inherit;
+    font-weight: 500;
+    line-height: 1.1;
+    color: inherit;
+}
+h1 {
+    margin: 0.67em 0px;
+}
+pre {
+margin: 1em;
+padding: 0.2em 0.9em;
+border: 1px solid;
+border-radius: 14px;
+background-color: #222222 !important;
+}
+code, pre * {
+background-color: #222222 !important;
+}
+article > blockquote, li > blockquote { 
+margin: 0.5em 1em ; 
+padding: 0.5em 1em;
+font-size: 1.2em;
+border-radius: 14px;
+ }
+blockquote, blockquote * {
+background-color: #222222 !important;
+font-style: italic;
+}
+article hr {
+ color: #337AB7;
+}
+
+
+h1, h2, h3, h4, h5, h6 {
+text-decoration: underline;
+text-decoration-style: wavy;
+text-decoration-color: #101010;
+-moz-text-decoration-style: wavy;
+}
+
+.col-md-6 h2 {
+ font-size: 2.6em;
+ text-decoration: none !important;
+}
+
+.col-md-6 >.post-date, .col-md-6 .post-date time {
+ font-size: 0.9em;
+}
+.col-md-6 article {
+border-bottom: 1px solid #080808;
+margin-bottom: 2em;
+}
+
