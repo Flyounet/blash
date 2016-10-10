@@ -1,1 +1,25 @@
-
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0">
+	<channel>
+		<generator>Blash: static blog engine written in bash</generator>
+		<docs>http://blogs.law.harvard.edu/tech/rss</docs>
+		<title><![CDATA[ a blash blog ]]></title>
+		<link>http://blash.example.com/alone</link>
+		<description><![CDATA[ written in bash ]]></description>
+		<pubDate>Mon, 10 Oct 2016 18:10:55 +0200</pubDate>
+		<item>
+			<title><![CDATA[ Welcome to Baker! ]]></title>
+			<link>http://blash.example.com/alone/2015-11-20-welcome-to-baker.html</link>
+			<guid>http://blash.example.com/alone/2015-11-20-welcome-to-baker.html</guid>
+			<description><![CDATA[ <p>This is your second post.</p> ]]></description>
+			<pubDate>Fri, 20 Nov 2015 12:06:07 +0100</pubDate>
+		</item>
+		<item>
+			<title><![CDATA[ hello world! ]]></title>
+			<link>http://blash.example.com/alone/2015-06-19-hello-world.html</link>
+			<guid>http://blash.example.com/alone/2015-06-19-hello-world.html</guid>
+			<description><![CDATA[ <p>This is your first post.</p> ]]></description>
+			<pubDate>Fri, 19 Jun 2015 03:01:56 +0200</pubDate>
+		</item>
+	</channel>
+</rss>
