@@ -108,9 +108,18 @@ config() {
 	# In my case I usually separate month basis.
 	export BLASH_TIMELINE_COMPARATOR="${BLASH_TIMELINE_COMPARATOR:=+%B %Y}"
 	export BLASH_TIMELINE_RENDERER="${BLASH_TIMELINE_RENDERER:=+%B %Y}"
+	
+	# When exporting .text file define extension
+	export BLASH_EXPORT_POST_TO_TEXT_EXT="${BLASH_EXPORT_POST_TO_TEXT_EXT:=.text}"
+	# Where to export the .text file
+	export BLASH_EXPORT_POST_TO_TEXT_OUTPUT_DIR="${BLASH_EXPORT_POST_TO_TEXT_OUTPUT_DIR:=${OUTPUT_DIR}}"
+	# Do we put the header of .md in .text file
+	export BLASH_EXPORT_POST_TO_TEXT_INCLUDE_HEADERS="${BLASH_EXPORT_POST_TO_TEXT_INCLUDE_HEADERS:=false}"
+	# Export post to text
+	export BLASH_EXPORT_POST_TO_TEXT="${BLASH_EXPORT_POST_TO_TEXT_INCLUDE_HEADERS:=true}"
 
 	# Editor : Defailt Editor will be vim. Update for your pleasure
-	export EDITOR=vim
+	export EDITOR="${EDITOR:=vim}"
 }
 
 #
@@ -563,6 +572,16 @@ post_infos() {
 	EOFF
 }
 
+ocopyPTT() {
+	[[ "${BLASH_EXPORT_POST_TO_TEXT,,}" != 'true' ]] && return 0
+	local _t="${BLASH_EXPORT_POST_TO_TEXT_OUTPUT_DIR}/${2}${BLASH_EXPORT_POST_TO_TEXT_EXT}"
+	if [ "${BLASH_EXPORT_POST_TO_TEXT_INCLUDE_HEADERS,,}" != 'true' ]; then
+		body < "${1}" > "${_t}"
+	else
+		cp "${1}" "${_t}"
+	fi
+}
+
 # post_bake it's where the magic start
 post_bake() {
 	[[ -z "${MkDown:=}" ]] && export MkDown="$(awk '/^BINARY MkDown$/ { c++; next } c == 1' "$(command -v "${0}")" | base64 -d | gzip -dc)" && \
@@ -595,6 +614,7 @@ post_bake() {
 			(( id_all++ ))
 			POST_PREV='index.html';POST_NEXT='index.html';
 			render_file "$post" > "$DRAFT_DIR/$id.html" &
+			copyPTT "${post}" "${id}" &
 			continue
 		fi
 		if [ ${__z:=0} -eq 0 -a "$(header hidden < "$post")" = true ]; then
