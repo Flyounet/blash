@@ -371,14 +371,14 @@ post_date() {
 	echo "For post ${_fname}, date has been set to : ${_pDate}"
 	read -i "${_PDate}" -p "Please, enter the new date/time for your post: " _nDate
 	[[ -z "${_nDate}" ]] && die "You wanted to set an empty date. Aborting..."
-	_nDate="$(date -u "+%FT%TZ" --date "${_nDate}" 2>/dev/null)"
+	_nDate="$(date -u "+%FT%TZ" --date "${_nDate//[ZT]/ }" 2>/dev/null)"
 	if [ ${?} -ne 0 ]; then
 		die "Date invalide."
 	else
 		sed -i -e 's;^[[:space:]]*date:[[:space:]]*.*$;date: '"${_nDate}"';g'  "${_fname}"
 	fi
 	if [ ${__D:=0} -eq 0 ]; then
-		mv "${_fname}" "${POST_DIR}/$(sed -e 's;^\([0-9]\{4\}\(-[0-9]\{2\}\)\{2\}-\);'"$(date "+%Y-%m-%d" --date "${_nDate}")"'-;g' <<< "${_fname##*/}")"
+		mv "${_fname}" "${POST_DIR}/$(sed -e 's;^\([0-9]\{4\}\(-[0-9]\{2\}\)\{2\}-\);'"$(date "+%Y-%m-%d" --date "${_nDate//[ZT]/ }")"'-;g' <<< "${_fname##*/}")"
 	fi
 }
 
@@ -415,10 +415,10 @@ post_rename() {
 	[[ -z "${_fname}" ]] && die "This post doesn't exist"
 	_pDate="$(header date < "${_fname}")"
 	_pTitle="$(header title < "${_fname}")"
-	_nDate="$(date -u "+%FT%TZ" --date "${_pDate}" 2>/dev/null)"
+	_nDate="$(date -u "+%FT%TZ" --date "${_pDate//[ZT]/ }" 2>/dev/null)"
 	[[ ${?} -ne 0 ]] && die "Date invalide."
-	mv "${_fname}" "${POST_DIR}/$(date -u +%Y-%m-%d --date "${_nDate}")-$(slug <<< "${_pTitle}").md" && \
-		echo "${POST_DIR}/$(date -u +%Y-%m-%d --date "${_nDate}")-$(slug <<< "${_pTitle}").md"
+	mv "${_fname}" "${POST_DIR}/$(date -u +%Y-%m-%d --date "${_nDate//[ZT]/ }")-$(slug <<< "${_pTitle}").md" && \
+		echo "${POST_DIR}/$(date -u +%Y-%m-%d --date "${_nDate//[ZT]/ }")-$(slug <<< "${_pTitle}").md"
 }
 
 # post_toggle toggles the status of a post (either use ID or post name)
