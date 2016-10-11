@@ -1,10 +1,20 @@
-1.2.0 - 2016/05/10 (Flyounet)
+1.2.1 - 2016/10/11 (Flyounet)
+* README update
++ Blash is now able to copy source posts for you to provide them.
+* EDITOR variable is now configurable.
+* All Themes are now mutualised under a directory `themes`
+
+1.2.0 - 2016/05/10 (Flyounet) <This was my last update to Baker, and the first Blash version>.
 * README big update
 + Indexes generated for tags could have their own template
 + Baker is able to generate a sort of timeline (depending on templates). Generate a section depending on the date of prev/next post.
 + The `-u` flag now update the field `update:`
 + A subdirectory with a bigger example than the origanl one has been created
 + A VERSION file has been created
+
+-----
+
+Those previous modifications have been done when I worked on Baker.
 
 1.1.4a - 2016/04/19 (Flyounet)
 * Removing unwanted default extra headers.
