@@ -870,6 +870,7 @@ if [ ! -z "${__w:=}" -a ! -d "${__w}" ]; then
 	echo "Working directory doesn't exist !" >&2
 	usage
 fi
+findConfigFile "${__f:=}"
 config "${__f:=}"
 
 readonly POST_DIR; readonly OUTPUT_DIR; readonly DRAFT_DIR; readonly LAYOUT_DIR; readonly PUBLIC_DIR
