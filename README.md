@@ -28,7 +28,7 @@ Blash is full of features, more or less
 
 ## Usages
 
-Blash is CLI software. This means Command Line Interface. Here are some commands available:
+Blash is CLI software. This means Command Line Interface. Here are some commands available (execute `blash -h` to have all commands) :
 
 - `./blash -h` : Give you the help. It's your best friend for running Blash.
 - `./blash -I` : Give you the configuration settings.
@@ -216,6 +216,11 @@ Here are some variables you could change (in fact all could be changed, it will 
 * `BLASH_EXTRA_HEADER`: When Blash create a post and adds the header(s) in the post (use `::` as separator).
 * `BLASH_TIMELINE_COMPARATOR`: Blash use this variable to compare date of post to set a new `<section>`.
 * `BLASH_TIMELINE_RENDERER`: Blash use this variable to render the test of new `<section>`.
+
+* `BLASH_EXPORT_POST_TO_TEXT` : When set to `true` copy the post source. This feature has been added when you want to provide source of your posts.
+* `BLASH_EXPORT_POST_TO_TEXT_EXT` : The `.md` extension of the copied is removed and replacce by this one. Don't forget to add a `.` (dot) at the beginning.
+* `BLASH_EXPORT_POST_TO_TEXT_OUTPUT_DIR` : Where do you want to copy your source files. (Default value is `OUTPUT_DIR`).
+* `BLASH_EXPORT_POST_TO_TEXT_INCLUDE_HEADERS` : If you want headers to be copied in the posts.
 
 ### Draft & Hidden posts:
 

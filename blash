@@ -116,7 +116,7 @@ config() {
 	# Do we put the header of .md in .text file
 	export BLASH_EXPORT_POST_TO_TEXT_INCLUDE_HEADERS="${BLASH_EXPORT_POST_TO_TEXT_INCLUDE_HEADERS:=false}"
 	# Export post to text
-	export BLASH_EXPORT_POST_TO_TEXT="${BLASH_EXPORT_POST_TO_TEXT_INCLUDE_HEADERS:=true}"
+	export BLASH_EXPORT_POST_TO_TEXT="${BLASH_EXPORT_POST_TO_TEXT:=true}"
 
 	# Editor : Defailt Editor will be vim. Update for your pleasure
 	export EDITOR="${EDITOR:=vim}"
@@ -572,7 +572,10 @@ post_infos() {
 	EOFF
 }
 
-ocopyPTT() {
+#
+# Take a post, an id and copy content of post
+#
+copyPTT() {
 	[[ "${BLASH_EXPORT_POST_TO_TEXT,,}" != 'true' ]] && return 0
 	local _t="${BLASH_EXPORT_POST_TO_TEXT_OUTPUT_DIR}/${2}${BLASH_EXPORT_POST_TO_TEXT_EXT}"
 	if [ "${BLASH_EXPORT_POST_TO_TEXT_INCLUDE_HEADERS,,}" != 'true' ]; then
@@ -624,6 +627,8 @@ post_bake() {
 			echo -e "${idx}\t- ${id}\t[${tags}] <--- HIDDEN"
 			continue
 		fi
+		# copyPTT will not handle hidden posts.
+		copyPTT "${post}" "${id}" &
 		if [ ${idx} -eq 0 ]; then # It's the first post, so the newer one is index
 			id_prev=0
 		else # search for the previous post not draft
