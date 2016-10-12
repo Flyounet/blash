@@ -577,7 +577,7 @@ post_infos() {
 #
 copyPTT() {
 	[[ "${BLASH_EXPORT_POST_TO_TEXT,,}" != 'true' ]] && return 0
-	local _t="${BLASH_EXPORT_POST_TO_TEXT_OUTPUT_DIR}/${2}${BLASH_EXPORT_POST_TO_TEXT_EXT}"
+	local _t="${2}${BLASH_EXPORT_POST_TO_TEXT_EXT}"
 	if [ "${BLASH_EXPORT_POST_TO_TEXT_INCLUDE_HEADERS,,}" != 'true' ]; then
 		body < "${1}" > "${_t}"
 	else
@@ -593,6 +593,8 @@ post_bake() {
 	rm -rf "$DRAFT_DIR" "$OUTPUT_DIR"
 	mkdir -p "$DRAFT_DIR" "$OUTPUT_DIR"
 
+	[[ ! -d "${PUBLIC_DIR}" ]] && die "PUBLIC_DIR \`${PUBLIC_DIR}\` not found. ABorting."
+	[[ ! -d "${LAYOUT_DIR}" ]] && die "LAYOUT_DIR \`${LAYOUT_DIR}\` not found. ABorting."
 	[[ -d "$POST_DIR" ]] || usage
 	[[ -d "$PUBLIC_DIR" ]] && cp -r "$PUBLIC_DIR"/. "$OUTPUT_DIR"
 	[[ -d "$PUBLIC_DIR" ]] && cp -r "$PUBLIC_DIR"/. "$DRAFT_DIR"
@@ -617,7 +619,7 @@ post_bake() {
 			(( id_all++ ))
 			POST_PREV='index.html';POST_NEXT='index.html';
 			render_file "$post" > "$DRAFT_DIR/$id.html" &
-			copyPTT "${post}" "${id}" &
+			copyPTT "${post}" "${DRAFT_DIR}/${id}" &
 			continue
 		fi
 		if [ ${__z:=0} -eq 0 -a "$(header hidden < "$post")" = true ]; then
@@ -628,7 +630,7 @@ post_bake() {
 			continue
 		fi
 		# copyPTT will not handle hidden posts.
-		copyPTT "${post}" "${id}" &
+		copyPTT "${post}" "${BLASH_EXPORT_POST_TO_TEXT_OUTPUT_DIR}/${id}" &
 		if [ ${idx} -eq 0 ]; then # It's the first post, so the newer one is index
 			id_prev=0
 		else # search for the previous post not draft
