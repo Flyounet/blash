@@ -484,6 +484,10 @@ post_edit() {
 
 # post_list list the id title and status of posts
 post_list() {
+	[[ ! -z "${1:-}" ]] && {
+		local _terms="${@}"; local _sCase='i'
+		[[ "${_terms:0:1}" = ':' ]] && { _sCase=''; _terms="${_terms:1}"; }
+	}
 	local idx=0
 	[[ ! -d "${POST_DIR}" ]] && die "${POST_DIR} doesn't exit. Aborting..."
 	readarray -t posts < <(find "$POST_DIR" -name '*.md' | sort -r)
@@ -494,11 +498,18 @@ post_list() {
 			local _hidden=''
 			[[ "$(header hidden < "$post")" = 'true' ]] && _hidden=' \e[2m\e[31m/!\ HIDDEN /!\ \e[0m'
 			# skip drafts
+			[[ ! -z "${_terms:=}" ]] && {
+				local _find=0
+				grep -q${_sCase} "${_terms}" "${post}" && _find=1
+				#[[ ${_sTitle:=0} -eq 1 ]] && { grep -qi "${_terms}" <<< "${post}" && _find=1; }
+			} 
+			[[ -z "${_terms}" || ${_find} -eq 1 ]] && {
 			if [ "$(header draft < "$post")" == 'false' ]; then
 				echo -e "${idx} $id [\e[32mPublished\e[0m] [$(header tags < "$post")]${_hidden}"
 			else
 				echo -e "${idx} $id [\e[31mDraft\e[0m] [$(header tags < "$post")]${_hidden}"
 			fi
+			}
 			((idx++))
 		done
 	) | column -t
@@ -775,6 +786,7 @@ usage() {
 	  -D            don't change the filename when changing date
 	  -e [title|id] edit your post (\$EDITOR used to call your editor)
 	  -f [file]     get the configuration from a file
+	  -g [term]     search for post (default is case insensitive. Start your search with : to become sensitive)
 	  -h            print help (you currently read it)
 	  -I		print informations on configuration
 	  -l            list all posts with state
@@ -831,9 +843,9 @@ if [[ ${1:-} =~ ${_regex} ]]; then
 		*) usage ;;
 	esac
 else
-	# used      : ---b--Dd-e-f--HhI------l---n-o-p---rSs-t---v-wXx---z----------
-	# available : AaB-Cc--E-F-Gg---iJjKkL-MmN-O-P-QqR---T-UuV-W---YyZ-0123456789
-	while getopts ":d:e:f:o:p:r:s:u:S:w:bDhHIlntvxXz" option; do
+	# used      : ---b--Dd-e-f-gHhI------l---n-o-p---rSs-t---v-wXx---z----------
+	# available : AaB-Cc--E-F-G----iJjKkL-MmN-O-P-QqR---T-UuV-W---YyZ-0123456789
+	while getopts ":d:e:f:g:o:p:r:s:u:S:w:bDhHIlntvxXz" option; do
 		case ${option} in
 			b) __b=1;;
 			d) __d=1;__post="${OPTARG}";;
@@ -842,6 +854,7 @@ else
 			l) __l=1;;
 			e) __e=1;__post="${OPTARG}";;
 			f) __f="${OPTARG}";;
+			g) __l=1; __g="${OPTARG}";;
 			n) __n=1;;
 			o) __o=1;__post="${OPTARG}";;
 			p) __p=1;__post="${OPTARG}";;
@@ -885,7 +898,7 @@ readonly TAGS_LINK; readonly TAGS_BASELINK
 if [ ${__b} -eq 1 ]; then
 	post_bake
 elif [ ${__l} -eq 1 ]; then
-	post_list
+	post_list "${__g:=}"
 elif [ ${__d} -eq 1 ]; then
 	post_date "${__post}"
 elif [ ${__e} -eq 1 ]; then
