@@ -6,6 +6,7 @@
  * EDITOR variable is now configurable.
  * All Themes are now mutualised under a directory `themes`
  * Blash is able to search into posts
+ * Blash now auto-update the 'update' field in a post using edit (-e), if the post is changed
 
 ## 1.2.0 - 2016/05/10 (Flyounet) <This was my last update to Baker, and the first Blash version>.
 

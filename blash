@@ -118,6 +118,9 @@ config() {
 	# Export post to text
 	export BLASH_EXPORT_POST_TO_TEXT="${BLASH_EXPORT_POST_TO_TEXT:=true}"
 
+	# When editing a post (with -e) auto update post
+	export BLASH_NO_AUTO_UPDATE_ON_EDIT="${BLASH_NO_AUTO_UPDATE_ON_EDIT:=false}"
+
 	# Editor : Defailt Editor will be vim. Update for your pleasure
 	export EDITOR="${EDITOR:=vim}"
 }
@@ -479,7 +482,10 @@ post_edit() {
 		_fname="${POST_DIR}/${1//\.md/}.md"
 	fi
 	[[ -z "${_fname}" ]] && die "This post doesn't exist"
+	local _mdBefore="$(md5sum "${_fname}")"
 	${EDITOR:=vim} "${_fname}"
+	local _mdAfter="$(md5sum "${_fname}")"
+	[[ "${_mdBefore}" != "${_mdAfter}" && ${__U:=0} -ne 1 && "${BLASH_NO_AUTO_UPDATE_ON_EDIT:=false}" = 'false' ]] && post_update "${1}"
 }
 
 # post_list list the id title and status of posts
@@ -780,7 +786,7 @@ usage() {
 	  date   [title] change the date of a post
 	  rename [title] parse the header to re-generate the filename of a post
 	### And the new one :
-	blash [-p <title>|-b [-t][-x][-X][-z]|-l|-s <title|id>|-d <title|id> [-D]|-e <title|id>|-r <title|id>|-u <title|id>] [-f <filename>] [-w <path>] [-I] [-h] [-v]
+	blash [-p <title>|-b [-t][-x][-X][-z]|-l|-s <title|id>|-d <title|id> [-D]|-e <title|id> [-U]|-r <title|id>|-u <title|id>] [-f <filename>] [-w <path>] [-I] [-h] [-v]
 	  -b            ship all posts
 	  -d [title|id] change the date of a post
 	  -D            don't change the filename when changing date
@@ -798,6 +804,7 @@ usage() {
 	  -S <all|none|user> Override the PRINT_ALL_SUMMARY variable
 	  -t            don't generate tags
 	  -u [title|id] Change the date of the field update in a post
+	  -U            When editing a post don't auto-update
 	  -v            print version
 	  -w [path]     use this path to work instead of ./
 	  -x            don't generate the RSS feed file
@@ -843,9 +850,9 @@ if [[ ${1:-} =~ ${_regex} ]]; then
 		*) usage ;;
 	esac
 else
-	# used      : ---b--Dd-e-f-gHhI------l---n-o-p---rSs-t---v-wXx---z----------
-	# available : AaB-Cc--E-F-G----iJjKkL-MmN-O-P-QqR---T-UuV-W---YyZ-0123456789
-	while getopts ":d:e:f:g:o:p:r:s:u:S:w:bDhHIlntvxXz" option; do
+	# used      : ---b--Dd-e-f-gHhI------l---n-o-p---rSs-t-Uu-v-wXx---z----------
+	# available : AaB-Cc--E-F-G----iJjKkL-MmN-O-P-QqR---T---V-W---YyZ-0123456789
+	while getopts ":d:e:f:g:o:p:r:s:u:S:w:bDhHIlntUvxXz" option; do
 		case ${option} in
 			b) __b=1;;
 			d) __d=1;__post="${OPTARG}";;
@@ -863,6 +870,7 @@ else
 			S) [[ "${OPTARG,,}" =~ ^(user|all|none)$ ]] || die "Argument '${OPTARG}' unknown."; export PRINT_ALL_SUMMARY="${OPTARG,,}";;
 			t) __t=1;;
 			u) __u=1;__post="${OPTARG}";;
+			U) __U=1;;
 			v) echo -e "${0} v${VERSION} [$Format:%h$]\nblash © Flyounet(2015-2016)\n" ; exit 0;;
 			w) [[ -d "${OPTARG}" ]] && __w="$( cd ${OPTARG}; pwd)/";;
 			x) __x=1;;
