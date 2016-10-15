@@ -604,8 +604,8 @@ post_bake() {
 	rm -rf "$DRAFT_DIR" "$OUTPUT_DIR"
 	mkdir -p "$DRAFT_DIR" "$OUTPUT_DIR"
 
-	[[ ! -d "${PUBLIC_DIR}" ]] && die "PUBLIC_DIR \`${PUBLIC_DIR}\` not found. ABorting."
-	[[ ! -d "${LAYOUT_DIR}" ]] && die "LAYOUT_DIR \`${LAYOUT_DIR}\` not found. ABorting."
+	[[ ! -d "${PUBLIC_DIR}" ]] && die "PUBLIC_DIR \`${PUBLIC_DIR}\` not found. Aborting."
+	[[ ! -d "${LAYOUT_DIR}" ]] && die "LAYOUT_DIR \`${LAYOUT_DIR}\` not found. Aborting."
 	[[ -d "$POST_DIR" ]] || usage
 	[[ -d "$PUBLIC_DIR" ]] && cp -r "$PUBLIC_DIR"/. "$OUTPUT_DIR"
 	[[ -d "$PUBLIC_DIR" ]] && cp -r "$PUBLIC_DIR"/. "$DRAFT_DIR"
