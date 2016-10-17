@@ -1,7 +1,7 @@
 ---
 title: hello world!
 date: 2015-06-19T01:01:56Z
-tags: baker,internet
+tags: blash,internet
 layout: post
 draft: false
 summary: This is your first post.

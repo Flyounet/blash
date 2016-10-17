@@ -31,7 +31,7 @@
 # \*------------------------------------------------------------------------*/
 
 
-VERSION='1.2.0'
+VERSION='1.2.1'
 
 findConfigFile() {
 	BLASH_DEFAULT_CONFIGDIR="${BLASH_DEFAULT_CONFIGDIR:=${XDG_CONFIG_HOME:=$HOME/.config}}"
@@ -108,9 +108,21 @@ config() {
 	# In my case I usually separate month basis.
 	export BLASH_TIMELINE_COMPARATOR="${BLASH_TIMELINE_COMPARATOR:=+%B %Y}"
 	export BLASH_TIMELINE_RENDERER="${BLASH_TIMELINE_RENDERER:=+%B %Y}"
+	
+	# When exporting .text file define extension
+	export BLASH_EXPORT_POST_TO_TEXT_EXT="${BLASH_EXPORT_POST_TO_TEXT_EXT:=.text}"
+	# Where to export the .text file
+	export BLASH_EXPORT_POST_TO_TEXT_OUTPUT_DIR="${BLASH_EXPORT_POST_TO_TEXT_OUTPUT_DIR:=${OUTPUT_DIR}}"
+	# Do we put the header of .md in .text file
+	export BLASH_EXPORT_POST_TO_TEXT_INCLUDE_HEADERS="${BLASH_EXPORT_POST_TO_TEXT_INCLUDE_HEADERS:=false}"
+	# Export post to text
+	export BLASH_EXPORT_POST_TO_TEXT="${BLASH_EXPORT_POST_TO_TEXT:=true}"
+
+	# When editing a post (with -e) auto update post
+	export BLASH_NO_AUTO_UPDATE_ON_EDIT="${BLASH_NO_AUTO_UPDATE_ON_EDIT:=false}"
 
 	# Editor : Defailt Editor will be vim. Update for your pleasure
-	export EDITOR=vim
+	export EDITOR="${EDITOR:=vim}"
 }
 
 #
@@ -371,14 +383,14 @@ post_date() {
 	echo "For post ${_fname}, date has been set to : ${_pDate}"
 	read -i "${_PDate}" -p "Please, enter the new date/time for your post: " _nDate
 	[[ -z "${_nDate}" ]] && die "You wanted to set an empty date. Aborting..."
-	_nDate="$(date -u "+%FT%TZ" --date "${_nDate}" 2>/dev/null)"
+	_nDate="$(date -u "+%FT%TZ" --date "${_nDate//[ZT]/ }" 2>/dev/null)"
 	if [ ${?} -ne 0 ]; then
 		die "Date invalide."
 	else
 		sed -i -e 's;^[[:space:]]*date:[[:space:]]*.*$;date: '"${_nDate}"';g'  "${_fname}"
 	fi
 	if [ ${__D:=0} -eq 0 ]; then
-		mv "${_fname}" "${POST_DIR}/$(sed -e 's;^\([0-9]\{4\}\(-[0-9]\{2\}\)\{2\}-\);'"$(date "+%Y-%m-%d" --date "${_nDate}")"'-;g' <<< "${_fname##*/}")"
+		mv "${_fname}" "${POST_DIR}/$(sed -e 's;^\([0-9]\{4\}\(-[0-9]\{2\}\)\{2\}-\);'"$(date "+%Y-%m-%d" --date "${_nDate//[ZT]/ }")"'-;g' <<< "${_fname##*/}")"
 	fi
 }
 
@@ -415,10 +427,10 @@ post_rename() {
 	[[ -z "${_fname}" ]] && die "This post doesn't exist"
 	_pDate="$(header date < "${_fname}")"
 	_pTitle="$(header title < "${_fname}")"
-	_nDate="$(date -u "+%FT%TZ" --date "${_pDate}" 2>/dev/null)"
+	_nDate="$(date -u "+%FT%TZ" --date "${_pDate//[ZT]/ }" 2>/dev/null)"
 	[[ ${?} -ne 0 ]] && die "Date invalide."
-	mv "${_fname}" "${POST_DIR}/$(date -u +%Y-%m-%d --date "${_nDate}")-$(slug <<< "${_pTitle}").md" && \
-		echo "${POST_DIR}/$(date -u +%Y-%m-%d --date "${_nDate}")-$(slug <<< "${_pTitle}").md"
+	mv "${_fname}" "${POST_DIR}/$(date -u +%Y-%m-%d --date "${_nDate//[ZT]/ }")-$(slug <<< "${_pTitle}").md" && \
+		echo "${POST_DIR}/$(date -u +%Y-%m-%d --date "${_nDate//[ZT]/ }")-$(slug <<< "${_pTitle}").md"
 }
 
 # post_toggle toggles the status of a post (either use ID or post name)
@@ -470,11 +482,18 @@ post_edit() {
 		_fname="${POST_DIR}/${1//\.md/}.md"
 	fi
 	[[ -z "${_fname}" ]] && die "This post doesn't exist"
+	local _mdBefore="$(md5sum "${_fname}")"
 	${EDITOR:=vim} "${_fname}"
+	local _mdAfter="$(md5sum "${_fname}")"
+	[[ "${_mdBefore}" != "${_mdAfter}" && ${__U:=0} -ne 1 && "${BLASH_NO_AUTO_UPDATE_ON_EDIT:=false}" = 'false' ]] && post_update "${1}"
 }
 
 # post_list list the id title and status of posts
 post_list() {
+	[[ ! -z "${1:-}" ]] && {
+		local _terms="${@}"; local _sCase='i'
+		[[ "${_terms:0:1}" = ':' ]] && { _sCase=''; _terms="${_terms:1}"; }
+	}
 	local idx=0
 	[[ ! -d "${POST_DIR}" ]] && die "${POST_DIR} doesn't exit. Aborting..."
 	readarray -t posts < <(find "$POST_DIR" -name '*.md' | sort -r)
@@ -485,11 +504,18 @@ post_list() {
 			local _hidden=''
 			[[ "$(header hidden < "$post")" = 'true' ]] && _hidden=' \e[2m\e[31m/!\ HIDDEN /!\ \e[0m'
 			# skip drafts
+			[[ ! -z "${_terms:=}" ]] && {
+				local _find=0
+				grep -q${_sCase} "${_terms}" "${post}" && _find=1
+				#[[ ${_sTitle:=0} -eq 1 ]] && { grep -qi "${_terms}" <<< "${post}" && _find=1; }
+			} 
+			[[ -z "${_terms}" || ${_find} -eq 1 ]] && {
 			if [ "$(header draft < "$post")" == 'false' ]; then
 				echo -e "${idx} $id [\e[32mPublished\e[0m] [$(header tags < "$post")]${_hidden}"
 			else
 				echo -e "${idx} $id [\e[31mDraft\e[0m] [$(header tags < "$post")]${_hidden}"
 			fi
+			}
 			((idx++))
 		done
 	) | column -t
@@ -563,6 +589,19 @@ post_infos() {
 	EOFF
 }
 
+#
+# Take a post, an id and copy content of post
+#
+copyPTT() {
+	[[ "${BLASH_EXPORT_POST_TO_TEXT,,}" != 'true' ]] && return 0
+	local _t="${2}${BLASH_EXPORT_POST_TO_TEXT_EXT}"
+	if [ "${BLASH_EXPORT_POST_TO_TEXT_INCLUDE_HEADERS,,}" != 'true' ]; then
+		body < "${1}" > "${_t}"
+	else
+		cp "${1}" "${_t}"
+	fi
+}
+
 # post_bake it's where the magic start
 post_bake() {
 	[[ -z "${MkDown:=}" ]] && export MkDown="$(awk '/^BINARY MkDown$/ { c++; next } c == 1' "$(command -v "${0}")" | base64 -d | gzip -dc)" && \
@@ -571,6 +610,8 @@ post_bake() {
 	rm -rf "$DRAFT_DIR" "$OUTPUT_DIR"
 	mkdir -p "$DRAFT_DIR" "$OUTPUT_DIR"
 
+	[[ ! -d "${PUBLIC_DIR}" ]] && die "PUBLIC_DIR \`${PUBLIC_DIR}\` not found. Aborting."
+	[[ ! -d "${LAYOUT_DIR}" ]] && die "LAYOUT_DIR \`${LAYOUT_DIR}\` not found. Aborting."
 	[[ -d "$POST_DIR" ]] || usage
 	[[ -d "$PUBLIC_DIR" ]] && cp -r "$PUBLIC_DIR"/. "$OUTPUT_DIR"
 	[[ -d "$PUBLIC_DIR" ]] && cp -r "$PUBLIC_DIR"/. "$DRAFT_DIR"
@@ -595,6 +636,7 @@ post_bake() {
 			(( id_all++ ))
 			POST_PREV='index.html';POST_NEXT='index.html';
 			render_file "$post" > "$DRAFT_DIR/$id.html" &
+			copyPTT "${post}" "${DRAFT_DIR}/${id}" &
 			continue
 		fi
 		if [ ${__z:=0} -eq 0 -a "$(header hidden < "$post")" = true ]; then
@@ -604,6 +646,8 @@ post_bake() {
 			echo -e "${idx}\t- ${id}\t[${tags}] <--- HIDDEN"
 			continue
 		fi
+		# copyPTT will not handle hidden posts.
+		copyPTT "${post}" "${BLASH_EXPORT_POST_TO_TEXT_OUTPUT_DIR}/${id}" &
 		if [ ${idx} -eq 0 ]; then # It's the first post, so the newer one is index
 			id_prev=0
 		else # search for the previous post not draft
@@ -742,12 +786,13 @@ usage() {
 	  date   [title] change the date of a post
 	  rename [title] parse the header to re-generate the filename of a post
 	### And the new one :
-	blash [-p <title>|-b [-t][-x][-X][-z]|-l|-s <title|id>|-d <title|id> [-D]|-e <title|id>|-r <title|id>|-u <title|id>] [-f <filename>] [-w <path>] [-I] [-h] [-v]
+	blash [-p <title>|-b [-t][-x][-X][-z]|-l|-s <title|id>|-d <title|id> [-D]|-e <title|id> [-U]|-r <title|id>|-u <title|id>] [-f <filename>] [-w <path>] [-I] [-h] [-v]
 	  -b            ship all posts
 	  -d [title|id] change the date of a post
 	  -D            don't change the filename when changing date
 	  -e [title|id] edit your post (\$EDITOR used to call your editor)
 	  -f [file]     get the configuration from a file
+	  -g [term]     search for post (default is case insensitive. Start your search with : to become sensitive)
 	  -h            print help (you currently read it)
 	  -I		print informations on configuration
 	  -l            list all posts with state
@@ -759,6 +804,7 @@ usage() {
 	  -S <all|none|user> Override the PRINT_ALL_SUMMARY variable
 	  -t            don't generate tags
 	  -u [title|id] Change the date of the field update in a post
+	  -U            When editing a post don't auto-update
 	  -v            print version
 	  -w [path]     use this path to work instead of ./
 	  -x            don't generate the RSS feed file
@@ -804,9 +850,9 @@ if [[ ${1:-} =~ ${_regex} ]]; then
 		*) usage ;;
 	esac
 else
-	# used      : ---b--Dd-e-f--HhI------l---n-o-p---rSs-t---v-wXx---z----------
-	# available : AaB-Cc--E-F-Gg---iJjKkL-MmN-O-P-QqR---T-UuV-W---YyZ-0123456789
-	while getopts ":d:e:f:o:p:r:s:u:S:w:bDhHIlntvxXz" option; do
+	# used      : ---b--Dd-e-f-gHhI------l---n-o-p---rSs-t-Uu-v-wXx---z----------
+	# available : AaB-Cc--E-F-G----iJjKkL-MmN-O-P-QqR---T---V-W---YyZ-0123456789
+	while getopts ":d:e:f:g:o:p:r:s:u:S:w:bDhHIlntUvxXz" option; do
 		case ${option} in
 			b) __b=1;;
 			d) __d=1;__post="${OPTARG}";;
@@ -815,6 +861,7 @@ else
 			l) __l=1;;
 			e) __e=1;__post="${OPTARG}";;
 			f) __f="${OPTARG}";;
+			g) __l=1; __g="${OPTARG}";;
 			n) __n=1;;
 			o) __o=1;__post="${OPTARG}";;
 			p) __p=1;__post="${OPTARG}";;
@@ -823,6 +870,7 @@ else
 			S) [[ "${OPTARG,,}" =~ ^(user|all|none)$ ]] || die "Argument '${OPTARG}' unknown."; export PRINT_ALL_SUMMARY="${OPTARG,,}";;
 			t) __t=1;;
 			u) __u=1;__post="${OPTARG}";;
+			U) __U=1;;
 			v) echo -e "${0} v${VERSION} [$Format:%h$]\nblash © Flyounet(2015-2016)\n" ; exit 0;;
 			w) [[ -d "${OPTARG}" ]] && __w="$( cd ${OPTARG}; pwd)/";;
 			x) __x=1;;
@@ -845,6 +893,7 @@ if [ ! -z "${__w:=}" -a ! -d "${__w}" ]; then
 	echo "Working directory doesn't exist !" >&2
 	usage
 fi
+findConfigFile "${__f:=}"
 config "${__f:=}"
 
 readonly POST_DIR; readonly OUTPUT_DIR; readonly DRAFT_DIR; readonly LAYOUT_DIR; readonly PUBLIC_DIR
@@ -857,7 +906,7 @@ readonly TAGS_LINK; readonly TAGS_BASELINK
 if [ ${__b} -eq 1 ]; then
 	post_bake
 elif [ ${__l} -eq 1 ]; then
-	post_list
+	post_list "${__g:=}"
 elif [ ${__d} -eq 1 ]; then
 	post_date "${__post}"
 elif [ ${__e} -eq 1 ]; then

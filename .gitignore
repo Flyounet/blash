@@ -1,4 +1,7 @@
-out*
+out
+out/
+out/*
+out/*.xml
 draft
 testing/posts
 testing/out
