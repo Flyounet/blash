@@ -822,7 +822,7 @@ usage() {
 	  date   [title] change the date of a post
 	  rename [title] parse the header to re-generate the filename of a post
 	### And the new one :
-	blash [-p <title>|-b [-t][-x][-X][-z]|-l|-s <title|id>|-c <title|id>|-d <title|id> [-D]|-e <title|id> [-U]|-r <title|id>|-u <title|id>] [-f <filename>] [-w <path>] [-I] [-h] [-v]
+	blash [-p <title>|-b [-t][-x][-X][-z]|-l|-s <title|id>|-c <title|id> [-C]|-d <title|id> [-D]|-e <title|id> [-U]|-r <title|id>|-u <title|id>] [-f <filename>] [-w <path>] [-I] [-h] [-v]
 	  -b            ship all posts
 	  -c [title|id] copy a post
 	  -C            When copying if a post exists, it'll be overwritten
