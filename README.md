@@ -222,6 +222,8 @@ Here are some variables you could change (in fact all could be changed, it will 
 * `BLASH_EXPORT_POST_TO_TEXT_OUTPUT_DIR` : Where do you want to copy your source files. (Default value is `OUTPUT_DIR`).
 * `BLASH_EXPORT_POST_TO_TEXT_INCLUDE_HEADERS` : If you want headers to be copied in the posts.
 
+* `BLASH_NO_AUTO_UPDATE_ON_EDIT` : If you edit a post blash will automatically update the field `update`, unless set to `true`.
+
 * `BLASH_ON_COPY_IMPLIES_UPDATE` : If you duplicate/copy a post blash will automatically update the field `update`, unless set to `false`.
 * `BLASH_ON_COPY_IMPLIES_EDIT` : If you duplicate/copy a post blash will automatically send it to the `EDITOR`, unless set to `false`.
 * `BLASH_ON_COPY_IMPLIES_RENAME` : If you duplicate/copy a post blash will automatically rename the post, unless set to `false`.
