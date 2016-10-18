@@ -393,20 +393,7 @@ find_post_file() {
 # post_copy : Copy a post to another, and edit, update, rename if allowed
 #
 post_copy() {
-	local _fname=''
-	readarray -t posts < <(find "$POST_DIR" -name '*.md' | sort -r)
-	if [ -z "${1:-}" ]; then
-		usage
-	elif [ -z "${1//[0-9]/}" ]; then
-		if [ ${1} -lt ${#posts[@]} ]; then
-			_fname="${posts[${1}]}"
-		fi
-	elif [ -f "${POST_DIR}/${1}" -o -f "${POST_DIR}/${1}.md" ]; then
-		_fname="${POST_DIR}/${1//\.md/}.md"
-	fi
-	if [ -z "${_fname}" ]; then
-		die "This post doesn't exist"
-	fi
+	local _fname="$(find_post_file "${@:-}")"
 	local _fcopy="${_fname//\.md/}-copy.md"
 	echo "${_fname##*/} copied to ${_fcopy##*/}"
 	[[ -f "${_fcopy}" && ${__C:=0} -eq 0 ]] && die "File already copied, not authorized to override. Aborting."
