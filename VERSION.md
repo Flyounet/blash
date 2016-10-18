@@ -1,4 +1,10 @@
 
+## 1.2.2 - 2016/10/18 (Flyounet)
+
+ * README update
+ + Blash is now able to copy/duplicate a post.
+ * Some code review.
+
 ## 1.2.1 - 2016/10/15 (Flyounet)
 
  * README update
