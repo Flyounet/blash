@@ -121,6 +121,11 @@ config() {
 	# When editing a post (with -e) auto update post
 	export BLASH_NO_AUTO_UPDATE_ON_EDIT="${BLASH_NO_AUTO_UPDATE_ON_EDIT:=false}"
 
+	# When copy/duplicate a post implies an update, a change of filename, and an edit
+	export BLASH_ON_COPY_IMPLIES_UPDATE="${BLASH_ON_COPY_IMPLIES_UPDATE:=true}"
+	export BLASH_ON_COPY_IMPLIES_RENAME="${BLASH_ON_COPY_IMPLIES_RENAME:=true}"
+	export BLASH_ON_COPY_IMPLIES_EDIT="${BLASH_ON_COPY_IMPLIES_EDIT:=true}"
+
 	# Editor : Defailt Editor will be vim. Update for your pleasure
 	export EDITOR="${EDITOR:=vim}"
 }
@@ -361,6 +366,37 @@ render_file() {
 		f="$LAYOUT_DIR/$(header layout < "$f").md"
 	done
 	echo "$content"
+}
+
+
+#
+# post_copy : Copy a post to another, and edit, update, rename if allowed
+#
+post_copy() {
+	local _fname=''
+	readarray -t posts < <(find "$POST_DIR" -name '*.md' | sort -r)
+	if [ -z "${1:-}" ]; then
+		usage
+	elif [ -z "${1//[0-9]/}" ]; then
+		if [ ${1} -lt ${#posts[@]} ]; then
+			_fname="${posts[${1}]}"
+		fi
+	elif [ -f "${POST_DIR}/${1}" -o -f "${POST_DIR}/${1}.md" ]; then
+		_fname="${POST_DIR}/${1//\.md/}.md"
+	fi
+	if [ -z "${_fname}" ]; then
+		die "This post doesn't exist"
+	fi
+	local _fcopy="${_fname//\.md/}-copy.md"
+	echo "${_fname##*/} copied to ${_fcopy##*/}"
+	[[ -f "${_fcopy}" && ${__C:=0} -eq 0 ]] && die "File already copied, not authorized to override. Aborting."
+	echo '---' > "${_fcopy}"
+	headers < "${_fname}" | sed -e 's;^\([[:space:]]*title:[[:space:]]*.*\);\1 Copy;' >> "${_fcopy}"
+	echo '---' >> "${_fcopy}"
+	body < "${_fname}" >> "${_fcopy}"
+	[[ "${BLASH_ON_COPY_IMPLIES_UPDATE:=true}" = 'true' ]] && post_update "${_fcopy##*/}"
+	[[ "${BLASH_ON_COPY_IMPLIES_EDIT:=true}" = 'true' ]] && post_edit "${_fcopy##*/}"
+	[[ "${BLASH_ON_COPY_IMPLIES_RENAME:=true}" = 'true' ]] && post_rename "${_fcopy##*/}"
 }
 
 # post_date change the date of a post and the name (unless a future -D is used)
@@ -786,8 +822,10 @@ usage() {
 	  date   [title] change the date of a post
 	  rename [title] parse the header to re-generate the filename of a post
 	### And the new one :
-	blash [-p <title>|-b [-t][-x][-X][-z]|-l|-s <title|id>|-d <title|id> [-D]|-e <title|id> [-U]|-r <title|id>|-u <title|id>] [-f <filename>] [-w <path>] [-I] [-h] [-v]
+	blash [-p <title>|-b [-t][-x][-X][-z]|-l|-s <title|id>|-c <title|id>|-d <title|id> [-D]|-e <title|id> [-U]|-r <title|id>|-u <title|id>] [-f <filename>] [-w <path>] [-I] [-h] [-v]
 	  -b            ship all posts
+	  -c [title|id] copy a post
+	  -C            When copying if a post exists, it'll be overwritten
 	  -d [title|id] change the date of a post
 	  -D            don't change the filename when changing date
 	  -e [title|id] edit your post (\$EDITOR used to call your editor)
@@ -850,11 +888,13 @@ if [[ ${1:-} =~ ${_regex} ]]; then
 		*) usage ;;
 	esac
 else
-	# used      : ---b--Dd-e-f-gHhI------l---n-o-p---rSs-t-Uu-v-wXx---z----------
-	# available : AaB-Cc--E-F-G----iJjKkL-MmN-O-P-QqR---T---V-W---YyZ-0123456789
-	while getopts ":d:e:f:g:o:p:r:s:u:S:w:bDhHIlntUvxXz" option; do
+	# used      : ---bCcDd-e-f-gHhI------l---n-o-p---rSs-t-Uu-v-wXx---z----------
+	# available : AaB-----E-F-G----iJjKkL-MmN-O-P-QqR---T---V-W---YyZ-0123456789
+	while getopts ":c:d:e:f:g:o:p:r:s:u:S:w:bCDhHIlntUvxXz" option; do
 		case ${option} in
 			b) __b=1;;
+			c) __c=1;__post="${OPTARG}";;
+			C) __C=1;;
 			d) __d=1;__post="${OPTARG}";;
 			D) __D=1;;
 			I) __I=1;;
@@ -882,10 +922,10 @@ else
 	done
 fi
 
-if [ $(( ${__b:=0} + ${__d:=0} + ${__e:=0} + ${__l:=0} + ${__o:=0} + ${__p:=0} + ${__r:=0} + ${__s:=0} + ${__I:=0} + ${__u:=0} )) -gt 1 ]; then
-	echo "You have to choose between -b, -d, -e, -I, -l, -o, -p, -r, -s, -u" >&2
+if [ $(( ${__b:=0} + ${__c:=0} + ${__d:=0} + ${__e:=0} + ${__l:=0} + ${__o:=0} + ${__p:=0} + ${__r:=0} + ${__s:=0} + ${__I:=0} + ${__u:=0} )) -gt 1 ]; then
+	echo "You have to choose between -b, -c, -d, -e, -I, -l, -o, -p, -r, -s, -u" >&2
 	usage
-elif [ $(( ${__b:=0} + ${__d:=0} + ${__e:=0} + ${__l:=0} + ${__o:=0} + ${__p:=0} + ${__r:=0} + ${__s:=0} + ${__I:=0} + ${__u:=0} )) -lt 1 ]; then
+elif [ $(( ${__b:=0} + ${__c:=0} + ${__d:=0} + ${__e:=0} + ${__l:=0} + ${__o:=0} + ${__p:=0} + ${__r:=0} + ${__s:=0} + ${__I:=0} + ${__u:=0} )) -lt 1 ]; then
 	echo "Nothing to do ?" >&2
 	usage
 fi
@@ -907,6 +947,8 @@ if [ ${__b} -eq 1 ]; then
 	post_bake
 elif [ ${__l} -eq 1 ]; then
 	post_list "${__g:=}"
+elif [ ${__c} -eq 1 ]; then
+	post_copy "${__post}"
 elif [ ${__d} -eq 1 ]; then
 	post_date "${__post}"
 elif [ ${__e} -eq 1 ]; then
