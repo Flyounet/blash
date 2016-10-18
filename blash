@@ -368,6 +368,26 @@ render_file() {
 	echo "$content"
 }
 
+#
+# find_post_file : find a post based on its id or its name
+#
+find_post_file() {
+	local _fname=''
+	readarray -t posts < <(find "$POST_DIR" -name '*.md' | sort -r)
+	if [ -z "${1:-}" ]; then
+		usage
+	elif [ -z "${1//[0-9]/}" ]; then
+		if [ ${1} -lt ${#posts[@]} ]; then
+			_fname="${posts[${1}]}"
+		fi
+	elif [ -f "${POST_DIR}/${1}" -o -f "${POST_DIR}/${1}.md" ]; then
+		_fname="${POST_DIR}/${1//\.md/}.md"
+	fi
+	if [ -z "${_fname}" ]; then
+		die "The following post doesn't exist : '${1}'"
+	fi
+	echo -n "${_fname}"
+}
 
 #
 # post_copy : Copy a post to another, and edit, update, rename if allowed
@@ -401,20 +421,7 @@ post_copy() {
 
 # post_date change the date of a post and the name (unless a future -D is used)
 post_date() {
-	local _fname=''
-	readarray -t posts < <(find "$POST_DIR" -name '*.md' | sort -r)
-	if [ -z "${1:-}" ]; then
-		usage
-	elif [ -z "${1//[0-9]/}" ]; then
-		if [ ${1} -lt ${#posts[@]} ]; then
-			_fname="${posts[${1}]}"
-		fi
-	elif [ -f "${POST_DIR}/${1}" -o -f "${POST_DIR}/${1}.md" ]; then
-		_fname="${POST_DIR}/${1//\.md/}.md"
-	fi
-	if [ -z "${_fname}" ]; then
-		die "This post doesn't exist"
-	fi
+	local _fname="$(find_post_file "${@:-}")"
 	_pDate="$(header date < "${_fname}")"
 	echo "For post ${_fname}, date has been set to : ${_pDate}"
 	read -i "${_PDate}" -p "Please, enter the new date/time for your post: " _nDate
@@ -432,35 +439,13 @@ post_date() {
 
 # post_update change the date of the update field in a post
 post_update() {
-	local _fname=''
-	readarray -t posts < <(find "$POST_DIR" -name '*.md' | sort -r)
-	if [ -z "${1:-}" ]; then
-		usage
-	elif [ -z "${1//[0-9]/}" ]; then
-		if [ ${1} -lt ${#posts[@]} ]; then
-			_fname="${posts[${1}]}"
-		fi
-	elif [ -f "${POST_DIR}/${1}" -o -f "${POST_DIR}/${1}.md" ]; then
-		_fname="${POST_DIR}/${1//\.md/}.md"
-	fi
-	if [ -z "${_fname}" ]; then
-		die "This post doesn't exist"
-	fi
+	local _fname="$(find_post_file "${@:-}")"
 	sed -i -e 's;^[[:space:]]*update:[[:space:]]*.*$;update: '"$(date -u "+%FT%TZ")"';g'  "${_fname}"
 }
 
 # post_rename parse the headers post to rename the post (usefull if changed the title or the date)
 post_rename() {
-	local _fname=''
-	readarray -t posts < <(find "$POST_DIR" -name '*.md' | sort -r)
-	if [ -z "${1:-}" ]; then
-		usage
-	elif [ -z "${1//[0-9]/}" ]; then
-		[[ ${1} -lt ${#posts[@]} ]] && _fname="${posts[${1}]}"
-	elif [ -f "${POST_DIR}/${1}" -o -f "${POST_DIR}/${1}.md" ]; then
-		_fname="${POST_DIR}/${1//\.md/}.md"
-	fi
-	[[ -z "${_fname}" ]] && die "This post doesn't exist"
+	local _fname="$(find_post_file "${@:-}")"
 	_pDate="$(header date < "${_fname}")"
 	_pTitle="$(header title < "${_fname}")"
 	_nDate="$(date -u "+%FT%TZ" --date "${_pDate//[ZT]/ }" 2>/dev/null)"
@@ -471,16 +456,7 @@ post_rename() {
 
 # post_toggle toggles the status of a post (either use ID or post name)
 post_toggle() {
-	local _fname=''
-	if [ -z "${1:-}" ]; then
-		usage
-	elif [ -z "${1//[0-9]/}" ]; then
-		readarray -t posts < <(find "$POST_DIR" -name '*.md' | sort -r)
-		[[ ${1} -lt ${#posts[@]} ]] && _fname="${posts[${1}]}"
-	elif [ -f "${POST_DIR}/${1}" -o -f "${POST_DIR}/${1}.md" ]; then
-		_fname="${POST_DIR}/${1//\.md/}.md"
-	fi
-	[[ -z "${_fname}" ]] && die "This post doesn't exist"
+	local _fname="$(find_post_file "${@:-}")"
 	if [ "$(header draft < "${_fname}")" == 'false' ]; then
 		sed -i -e 's;^[[:space:]]*draft:[[:space:]]*false[[:space:]]*$;draft: true;g'  "${_fname}"
 	else
@@ -490,16 +466,7 @@ post_toggle() {
 
 # post_open call the xdg-open for a post (either use ID or post name)
 post_open() {
-	local _fname=''
-	if [ -z "${1:-}" ]; then
-		usage
-	elif [ -z "${1//[0-9]/}" ]; then
-		readarray -t posts < <(find "$POST_DIR" -name '*.md' | sort -r)
-		[[ ${1} -lt ${#posts[@]} ]] && _fname="${posts[${1}]}"
-	elif [ -f "${POST_DIR}/${1}" -o -f "${POST_DIR}/${1}.md" ]; then
-		_fname="${POST_DIR}/${1//\.md/}.md"
-	fi
-	[[ -z "${_fname}" ]] && die "This post doesn't exist"
+	local _fname="$(find_post_file "${@:-}")"
 	local _hname="${_fname##*/}"; _hname="${DRAFT_DIR}/${_hname%.*}.html"
 	[[ "$(header draft < "${_fname}")" == 'false' ]] && { _hname="${_fname##*/}"; _hname="${OUTPUT_DIR}/${_hname%.*}.html"; }
 	echo "I'll open : ${_hname}"
@@ -508,16 +475,7 @@ post_open() {
 
 # post_edit call the EDITOR for a post (either use ID or post name)
 post_edit() {
-	local _fname=''
-	if [ -z "${1:-}" ]; then
-		usage
-	elif [ -z "${1//[0-9]/}" ]; then
-		readarray -t posts < <(find "$POST_DIR" -name '*.md' | sort -r)
-		[[ ${1} -lt ${#posts[@]} ]] && _fname="${posts[${1}]}"
-	elif [ -f "${POST_DIR}/${1}" -o -f "${POST_DIR}/${1}.md" ]; then
-		_fname="${POST_DIR}/${1//\.md/}.md"
-	fi
-	[[ -z "${_fname}" ]] && die "This post doesn't exist"
+	local _fname="$(find_post_file "${@:-}")"
 	local _mdBefore="$(md5sum "${_fname}")"
 	${EDITOR:=vim} "${_fname}"
 	local _mdAfter="$(md5sum "${_fname}")"
