@@ -31,7 +31,7 @@
 # \*------------------------------------------------------------------------*/
 
 
-VERSION='1.2.2'
+VERSION='1.2.3'
 
 findConfigFile() {
 	BLASH_DEFAULT_CONFIGDIR="${BLASH_DEFAULT_CONFIGDIR:=${XDG_CONFIG_HOME:=$HOME/.config}}"
@@ -336,7 +336,7 @@ render() {
 render_file_case() {
 	case "$1" in
 	"$POST_DIR"/*)
-		perl -e "${MkDown}"
+		[[ "$(header nomarkdown < "${post}")" != 'true' ]] && perl -e "${MkDown}"
 		;;
 	"$LAYOUT_DIR"/*)
 		render
@@ -676,7 +676,9 @@ post_bake() {
 		fi
 		# Manage summary
 		if [ "${PRINT_ALL_SUMMARY}" = 'all' -o "$(header sumprint < "${post}")" = 'true' -a "${PRINT_ALL_SUMMARY}" = 'user' ]; then
-			declare -g SUMMARYPARSED="$(perl -e "${MkDown}" <<< "$(header summary < "${post}")")"
+			if [ "$(header nomarkdown < "${post}")" != 'true' ]; then
+				declare -g SUMMARYPARSED="$(perl -e "${MkDown}" <<< "$(header summary < "${post}")")"
+			fi
 			export PRINTSUMMARY=true
 		else
 			unset PRINTSUMMARY
@@ -694,7 +696,8 @@ post_bake() {
 			declare -g "posts_${idx}_atomtag"="${ATOM_TAG},${_atomd%%-*}"
 		fi
 		export_headers "$post" "posts_${idx}_"
-		local lesum="posts_${idx}_summary";[[ ! -z "${!lesum}" ]] && declare -g "posts_${idx}_summary"="$(perl -e "${MkDown}" <<< "$(header summary < "${post}")")"
+#		local lesum="posts_${idx}_summary";[[ ! -z "${!lesum}" ]] && declare -g "posts_${idx}_summary"="$(perl -e "${MkDown}" <<< "$(header summary < "${post}")")"
+		local lesum="posts_${idx}_summary";[[ ! -z "${!lesum}" ]] && { declare -g "posts_${idx}_summary"="$(header summary < "${post}")"; [[ "$(header nomarkdown < "${post}")" != 'true' ]] && declare -g "posts_${idx}_summary"="$(perl -e "${MkDown}" <<< "${posts_${idx}_summary}")";  }
 		POST_PREV="$id.html"
 		(( id_all++ ))
 		(( idx++ ))
