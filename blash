@@ -642,9 +642,9 @@ post_bake() {
 	for _lid in "${!posts[@]}"; do
 		post="${posts[${_lid}]}"
 #		echo "${post} -- $(get_headers < "${post}")" >&2
-		eval "$(get_headers < "${post}")"
-echo "$post : ${POST_HEADERS[date]} - ${POST_HEADERS[date-notz]} - ${POST_HEADERS[title]}"
-echo "$post : ${POSTS_HEADERS[post_${_lid}_date]} - ${POSTS_HEADERS[post_${_lid}_date-notz]} - ${POSTS_HEADERS[post_${_lid}_title]}"
+#		eval "$(get_headers < "${post}")"
+#echo "$post : ${POST_HEADERS[date]} - ${POST_HEADERS[date-notz]} - ${POST_HEADERS[title]}"
+#echo "$post : ${POSTS_HEADERS[post_${_lid}_date]} - ${POSTS_HEADERS[post_${_lid}_date-notz]} - ${POSTS_HEADERS[post_${_lid}_title]}"
 #		echo "===> $post date      : ${POST_HEADERS[date]}" >&2
 #		echo "===> $post date-notz : ${POST_HEADERS[date-notz]}" >&2
 		[[ ${id_all} -eq 0 ]] && echo -e "id\t- Title\t[Tags]"
@@ -708,7 +708,7 @@ echo "$post : ${POSTS_HEADERS[post_${_lid}_date]} - ${POSTS_HEADERS[post_${_lid}
 		# look for the tags
 		if [ ${__t:=0} -eq 0 ]; then # When implemented the -c will avoid tags generation
 			local _tag=''; TAGSLIST=''
-			tags="${POST_HEADERS[tags]}"
+			tags="${POSTS_HEADERS[post_${_lid}_tags]}"
 			if [ ! -z "${tags}" ]; then
 				while read _tag; do
 					TAGSLIST="${TAGSLIST}${TAGS_LINK//==tagNameSlugged==/$(slug <<< "${_tag}")}"
@@ -768,22 +768,31 @@ echo "$post : ${POSTS_HEADERS[post_${_lid}_date]} - ${POSTS_HEADERS[post_${_lid}
 		export GENERATE_TAGS=true
 		while read _tagIdx; do
 			# It's really important to unset all posts variables
+echo "-----------------------------------------------------"
+echo "${_tagIdx} -- ${_allTags}"
+set -xv
 			while read a; do unset "${a}"; done <<< "$(compgen  -v | grep -E "^posts_[0-9]")"
+set +xv
 			idx=0
 			id_all=0
-			for post in "${posts[@]}"; do
+#			for post in "${posts[@]}"; do
+			for _lid in "${!posts[@]}"; do
+				post="${posts[${_lid}]}"
 				id="$(basename "$post" .md)"
-				if [ "$(header draft < "$post")" != false ]; then continue; fi
-				tags="$(header tags < "$post")"
-				if [ ! -z "${tags}" ]; then
+#				if [ "$(header draft < "$post")" != false ]; then continue; fi
+				if [ "${POSTS_HEADERS[post_${_lid}_draft]}" != 'false' ]; then continue; fi
+#				tags="$(header tags < "$post")"
+#				if [ ! -z "${tags}" ]; then
+				if [ ! -z "${POSTS_HEADERS[post_${_lid}_tags]}" ]; then
 					while read _tag; do
 						if [ "${_tag}" = "${_tagIdx}" ] ; then
 							declare "posts_${idx}_id"="$id"
 							export_headers "$post" "posts_${idx}_"
-							local lesum="posts_${idx}_summary";[[ ! -z "${!lesum}" ]] && declare -g "posts_${idx}_summary"="$(perl -e "${MkDown}" <<< "$(header summary < "${post}")")"
+#							local lesum="posts_${idx}_summary";[[ ! -z "${!lesum}" ]] && declare -g "posts_${idx}_summary"="$(perl -e "${MkDown}" <<< "$(header summary < "${post}")")"
+							local lesum="posts_${idx}_summary";[[ ! -z "${!lesum}" ]] && declare -g "posts_${idx}_summary"="$(perl -e "${MkDown}" <<< "${POSTS_HEADERS[post_${_lid}_summary]}")"
 							(( idx++ ))
 						fi
-					done <<< "$(echo -e "${tags//,/\\n}")"
+					done <<< "$(echo -e "${POSTS_HEADERS[post_${_lid}_draft]//,/\\n}")"
 				fi
 			done
 			render_file "$LAYOUT_DIR/${TAGS_LAYOUT}" > "$OUTPUT_DIR/index_$(slug <<< "${_tagIdx}").html" &
