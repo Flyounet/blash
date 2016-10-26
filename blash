@@ -703,18 +703,25 @@ post_bake() {
 		unset NEWENDSECTION;
 		declare -g "posts_${idx}_NEWENDSECTION"=''
 #		[[ $((id_all+idx_next)) -eq ${#posts[@]} || "$(date --date="${POSTS_HEADERS[post_${_lid}_date-notz]}" "${BLASH_TIMELINE_COMPARATOR}")" != "$(date --date="$(header date < "${posts[$((id_all+idx_next))]}" | tr "TZ" "  ")" "${BLASH_TIMELINE_COMPARATOR}")" ]] && declare -g "posts_${idx}_NEWENDSECTION"=true
-		[[ $((id_all+idx_next)) -eq ${#posts[@]} || "$(date --date="${POSTS_HEADERS[post_${_lid}_date-notz]}" "${BLASH_TIMELINE_COMPARATOR}")" != "$(date --date="${POSTS_HEADERS[post_$((id_all+idx_next))_date-notz],,}" "${BLASH_TIMELINE_COMPARATOR}")" ]] && declare -g "posts_${idx}_NEWENDSECTION"=true
+		[[ 	$((id_all+idx_next)) -eq ${#posts[@]} || \
+			"$(date --date="${POSTS_HEADERS[post_${_lid}_date-notz]}" "${BLASH_TIMELINE_COMPARATOR}")" != \
+			"$(date --date="${POSTS_HEADERS[post_$((id_all+idx_next))_date-notz],,}" "${BLASH_TIMELINE_COMPARATOR}")" \
+		]] && declare -g "posts_${idx}_NEWENDSECTION"=true
 		POST_NEXT="${POST_NEXT%*.md}.html"
 		# look for the tags
 		if [ ${__t:=0} -eq 0 ]; then # When implemented the -c will avoid tags generation
 			local _tag=''; TAGSLIST=''
-			tags="${POSTS_HEADERS[post_${_lid}_tags]}"
-			if [ ! -z "${tags}" ]; then
+#			tags="${POSTS_HEADERS[post_${_lid}_tags]}"
+#			if [ ! -z "${tags}" ]; then
+set -xv
+			if [ ! -z "${POSTS_HEADERS[post_${_lid}_tags]}" ]; then
 				while read _tag; do
 					TAGSLIST="${TAGSLIST}${TAGS_LINK//==tagNameSlugged==/$(slug <<< "${_tag}")}"
 					TAGSLIST="${TAGSLIST//==tagName==/${_tag}}"
 					_allTags="${_allTags//${_tag},/}${_tag},"
-				done <<< "$(echo -e "${tags//,/\\n}")"
+#				done <<< "$(echo -e "${tags//,/\\n}")"
+				done <<< "$(echo -e "${POSTS_HEADERS[post_${_lid}_tags]//,/\\n}")"
+set +xv
 			fi
 		else
 			unset TAGSLIST
@@ -728,7 +735,8 @@ post_bake() {
 			unset PRINTSUMMARY
 		fi
 		# Render the post
-		echo -e "${idx}\t- ${id}\t[${tags}]"
+#		echo -e "${idx}\t- ${id}\t[${tags}]"
+		echo -e "${idx}\t- ${id}\t[${POSTS_HEADERS[post_${_lid}_tags]}]"
 		render_file "$post" > "$OUTPUT_DIR/$id.html" &
 		declare "posts_${idx}_id"="$id"
 		if [ ${__x:=0} -eq 0 ]; then # RSS datetime has to be RFC 822 compliant
@@ -782,6 +790,7 @@ set +xv
 #				if [ "$(header draft < "$post")" != false ]; then continue; fi
 				if [ "${POSTS_HEADERS[post_${_lid}_draft]}" != 'false' ]; then continue; fi
 #				tags="$(header tags < "$post")"
+#				tags="${POSTS_HEADERS[post_${_lid}_tags]}"
 #				if [ ! -z "${tags}" ]; then
 				if [ ! -z "${POSTS_HEADERS[post_${_lid}_tags]}" ]; then
 					while read _tag; do
@@ -792,7 +801,8 @@ set +xv
 							local lesum="posts_${idx}_summary";[[ ! -z "${!lesum}" ]] && declare -g "posts_${idx}_summary"="$(perl -e "${MkDown}" <<< "${POSTS_HEADERS[post_${_lid}_summary]}")"
 							(( idx++ ))
 						fi
-					done <<< "$(echo -e "${POSTS_HEADERS[post_${_lid}_draft]//,/\\n}")"
+#					done <<< "$(echo -e "${tags//,/\\n}")"
+					done <<< "$(echo -e "${POSTS_HEADERS[post_${_lid}_tags]//,/\\n}")"
 				fi
 			done
 			render_file "$LAYOUT_DIR/${TAGS_LAYOUT}" > "$OUTPUT_DIR/index_$(slug <<< "${_tagIdx}").html" &
