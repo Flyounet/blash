@@ -167,14 +167,21 @@ get_headers() {
 get_posts_headers() {
 	eval "${@}"
 	declare -A POSTS_HEADERS=()
+	declare -a POSTS_DRAFT=()
+	declare -a POSTS_HIDDEN=()
 	for _lid in ${!posts[@]}; do
 		declare -A POST_HEADERS=(); unset POST_HEADERS
 		eval "$(get_headers < "${posts[${_lid}]}")"
 		for _sub_lid in ${!POST_HEADERS[@]}; do
 			POSTS_HEADERS[post_${_lid}_${_sub_lid}]="${POST_HEADERS[${_sub_lid}]}"
+			[[ ! -z "${POSTS_HEADERS[post_${_lid}_draft]}" && "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'failse' ]] && POSTS_DRAFT[${_lid}]=${_lid}
+			[[ ! -z "${POSTS_HEADERS[post_${_lid}_hidden]}" && "${POSTS_HEADERS[post_${_lid}_hidden],,}" != 'false' ]] && POSTS_HIDDEN[${_lid}]=${_lid}
 		done
 	done
+	echo "$(declare -p POSTS_DRAFT);"
+	echo "$(declare -p POSTS_HIDDEN);"
 	echo "$(declare -p POSTS_HEADERS);"
+#	echo "$(declare -p POSTS_HEADERS);$(declare -p POSTS_DRAFT);$(declare -p POSTS_HIDDEN)"
 }
 
 # body prints the body of a markdown file
@@ -610,27 +617,52 @@ copyPTT() {
 	fi
 }
 
-# post_bake it's where the magic start
-post_bake() {
+# _post_blash_markdown : Getting Markdown binary
+_post_blash_markdown() {
 	[[ -z "${MkDown:=}" ]] && export MkDown="$(awk '/^BINARY MkDown$/ { c++; next } c == 1' "$(command -v "${0}")" | base64 -d | gzip -dc)" && \
 	[[ "$(md5sum -b <<< "${MkDown}" | cut -d ' ' -f1)" != 'c1609b303b7fe654435380a168d78acf' ]] && die 'Embedded Markdown is corrupted !'
+}
 
-	rm -rf "$DRAFT_DIR" "$OUTPUT_DIR"
-	mkdir -p "$DRAFT_DIR" "$OUTPUT_DIR"
+# _post_blash_prepare_dirs : Create/update/delete working dirs
+_post_blash_prepare_dirs() {
+	[[ "${DRAFT_DIR}" = '/' && "${OUTPUT_DIR}" = '/' ]] && die "DRAFT_DIR and/or OUTPUT_DIR are equal to /. Can't remove them. Abroting."
+	# Cleaning DRAFT_DIR & OUTPUT_DIR
+	rm -rf "${DRAFT_DIR}" "${OUTPUT_DIR}"; mkdir -p "${DRAFT_DIR}" "${OUTPUT_DIR}"
 
 	[[ ! -d "${PUBLIC_DIR}" ]] && die "PUBLIC_DIR \`${PUBLIC_DIR}\` not found. Aborting."
 	[[ ! -d "${LAYOUT_DIR}" ]] && die "LAYOUT_DIR \`${LAYOUT_DIR}\` not found. Aborting."
-	[[ -d "$POST_DIR" ]] || usage
-	[[ -d "$PUBLIC_DIR" ]] && cp -r "$PUBLIC_DIR"/. "$OUTPUT_DIR"
-	[[ -d "$PUBLIC_DIR" ]] && cp -r "$PUBLIC_DIR"/. "$DRAFT_DIR"
-	touch "$DRAFT_DIR/index.html"
+	[[ -d "${POST_DIR}" ]] || usage
+	[[ -d "${PUBLIC_DIR}" ]] && cp -r "${PUBLIC_DIR}"/. "${OUTPUT_DIR}"
+	[[ -d "${PUBLIC_DIR}" ]] && cp -r "${PUBLIC_DIR}"/. "${DRAFT_DIR}"
+	touch "${DRAFT_DIR}/index.html"
+}
+
+# post_bake it's where the magic start
+post_bake() {
+	# Getting Markdown binaries
+	_post_blash_markdown
+#	[[ -z "${MkDown:=}" ]] && export MkDown="$(awk '/^BINARY MkDown$/ { c++; next } c == 1' "$(command -v "${0}")" | base64 -d | gzip -dc)" && \
+#	[[ "$(md5sum -b <<< "${MkDown}" | cut -d ' ' -f1)" != 'c1609b303b7fe654435380a168d78acf' ]] && die 'Embedded Markdown is corrupted !'
+
+	# Preparing Direcotries
+	_post_blash_prepare_dirs
+#	rm -rf "$DRAFT_DIR" "$OUTPUT_DIR"
+#	mkdir -p "$DRAFT_DIR" "$OUTPUT_DIR"
+
+#	[[ ! -d "${PUBLIC_DIR}" ]] && die "PUBLIC_DIR \`${PUBLIC_DIR}\` not found. Aborting."
+#	[[ ! -d "${LAYOUT_DIR}" ]] && die "LAYOUT_DIR \`${LAYOUT_DIR}\` not found. Aborting."
+#	[[ -d "$POST_DIR" ]] || usage
+#	[[ -d "$PUBLIC_DIR" ]] && cp -r "$PUBLIC_DIR"/. "$OUTPUT_DIR"
+#	[[ -d "$PUBLIC_DIR" ]] && cp -r "$PUBLIC_DIR"/. "$DRAFT_DIR"
+#	touch "$DRAFT_DIR/index.html"
 
 	if [ ${__X:=0} -eq 0 ]; then
 		export ATOM_DATE="$(date -u +%FT%TZ)"
 		export ATOM_TAG="${RSS_SITE_URL#*//}"; ATOM_TAG="${ATOM_TAG%%/*}"
 	fi
 
-	readarray -t posts < <(find "$POST_DIR" -name '*.md' | sort -r)
+	# Getting list of all posts (files with .md extension)
+	readarray -t posts < <(find "${POST_DIR}" -name '*.md' | sort -r)
 	echo "Rendering Posts..." >&2
 	idx=0
 	id_all=0
@@ -838,6 +870,7 @@ usage() {
 	  -x            don't generate the RSS feed file
 	  -X            don't generate the Atom feed file
 	  -z            don't generate hidden Post
+	  -Z            don't generate draft Post
 	EOF
 	exit 1
 }
@@ -878,9 +911,9 @@ if [[ ${1:-} =~ ${_regex} ]]; then
 		*) usage ;;
 	esac
 else
-	# used      : ---bCcDd-e-f-gHhI------l---n-o-p---rSs-t-Uu-v-wXx---z----------
-	# available : AaB-----E-F-G----iJjKkL-MmN-O-P-QqR---T---V-W---YyZ-0123456789
-	while getopts ":c:d:e:f:g:o:p:r:s:u:S:w:bCDhHIlntUvxXz" option; do
+	# used      : ---bCcDd-e-f-gHhI------l---n-o-p---rSs-t-Uu-v-wXx-Zz----------
+	# available : AaB-----E-F-G----iJjKkL-MmN-O-P-QqR---T---V-W---Yy--0123456789
+	while getopts ":c:d:e:f:g:o:p:r:s:u:S:w:bCDhHIlntUvxXzZ" option; do
 		case ${option} in
 			b) __b=1;;
 			c) __c=1;__post="${OPTARG}";;
@@ -906,6 +939,7 @@ else
 			x) __x=1;;
 			X) __X=1;;
 			z) __z=1;;
+			Z) __Z=1;;
 			?|H|h) usage; exit 0;;
 			*) echo "Argument unknown" >&2; usage;;
 		esac
