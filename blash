@@ -174,7 +174,7 @@ get_posts_headers() {
 		eval "$(get_headers < "${posts[${_lid}]}")"
 		for _sub_lid in ${!POST_HEADERS[@]}; do
 			POSTS_HEADERS[post_${_lid}_${_sub_lid}]="${POST_HEADERS[${_sub_lid}]}"
-			[[ ! -z "${POSTS_HEADERS[post_${_lid}_draft]}" && "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'failse' ]] && POSTS_DRAFT[${_lid}]=${_lid}
+			[[ ! -z "${POSTS_HEADERS[post_${_lid}_draft]}" && "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'false' ]] && POSTS_DRAFT[${_lid}]=${_lid}
 			[[ ! -z "${POSTS_HEADERS[post_${_lid}_hidden]}" && "${POSTS_HEADERS[post_${_lid}_hidden],,}" != 'false' ]] && POSTS_HIDDEN[${_lid}]=${_lid}
 		done
 	done
@@ -625,7 +625,7 @@ _post_blash_markdown() {
 
 # _post_blash_prepare_dirs : Create/update/delete working dirs
 _post_blash_prepare_dirs() {
-	[[ "${DRAFT_DIR}" = '/' && "${OUTPUT_DIR}" = '/' ]] && die "DRAFT_DIR and/or OUTPUT_DIR are equal to /. Can't remove them. Abroting."
+	[[ "${DRAFT_DIR}" = '/' && "${OUTPUT_DIR}" = '/' ]] && die "DRAFT_DIR and/or OUTPUT_DIR are equal to /. Can't remove them. Aborting."
 	# Cleaning DRAFT_DIR & OUTPUT_DIR
 	rm -rf "${DRAFT_DIR}" "${OUTPUT_DIR}"; mkdir -p "${DRAFT_DIR}" "${OUTPUT_DIR}"
 
@@ -641,33 +641,20 @@ _post_blash_prepare_dirs() {
 post_bake() {
 	# Getting Markdown binaries
 	_post_blash_markdown
-#	[[ -z "${MkDown:=}" ]] && export MkDown="$(awk '/^BINARY MkDown$/ { c++; next } c == 1' "$(command -v "${0}")" | base64 -d | gzip -dc)" && \
-#	[[ "$(md5sum -b <<< "${MkDown}" | cut -d ' ' -f1)" != 'c1609b303b7fe654435380a168d78acf' ]] && die 'Embedded Markdown is corrupted !'
-
 	# Preparing Direcotries
 	_post_blash_prepare_dirs
-#	rm -rf "$DRAFT_DIR" "$OUTPUT_DIR"
-#	mkdir -p "$DRAFT_DIR" "$OUTPUT_DIR"
-
-#	[[ ! -d "${PUBLIC_DIR}" ]] && die "PUBLIC_DIR \`${PUBLIC_DIR}\` not found. Aborting."
-#	[[ ! -d "${LAYOUT_DIR}" ]] && die "LAYOUT_DIR \`${LAYOUT_DIR}\` not found. Aborting."
-#	[[ -d "$POST_DIR" ]] || usage
-#	[[ -d "$PUBLIC_DIR" ]] && cp -r "$PUBLIC_DIR"/. "$OUTPUT_DIR"
-#	[[ -d "$PUBLIC_DIR" ]] && cp -r "$PUBLIC_DIR"/. "$DRAFT_DIR"
-#	touch "$DRAFT_DIR/index.html"
-
-	if [ ${__X:=0} -eq 0 ]; then
-		export ATOM_DATE="$(date -u +%FT%TZ)"
-		export ATOM_TAG="${RSS_SITE_URL#*//}"; ATOM_TAG="${ATOM_TAG%%/*}"
-	fi
-
-	# Getting list of all posts (files with .md extension)
+	# Getting list of all posts (files with .md extension) and all headers
 	readarray -t posts < <(find "${POST_DIR}" -name '*.md' | sort -r)
+	eval "$(get_posts_headers "$(declare -p posts)")"
+	if [ ${__Z:=0} -eq 0 -a ${#POSTS_DRAFT} -ne 0 ]; then
+		echo "Rendering Draft Posts..." >&2
+	else
+		echo "Either no Draft Posts (or not allowed to work on)..." >&2
+	fi
 	echo "Rendering Posts..." >&2
 	idx=0
 	id_all=0
 	_allTags=''
-	eval "$(get_posts_headers "$(declare -p posts)")"
 	for _lid in "${!posts[@]}"; do
 		post="${posts[${_lid}]}"
 		[[ ${id_all} -eq 0 ]] && echo -e "id\t- Title\t[Tags]"
@@ -776,6 +763,11 @@ post_bake() {
 		(( id_all++ ))
 		(( idx++ ))
 	done
+	if [ ${__X:=0} -eq 0 ]; then
+		export ATOM_DATE="$(date -u +%FT%TZ)"
+		export ATOM_TAG="${RSS_SITE_URL#*//}"; ATOM_TAG="${ATOM_TAG%%/*}"
+	fi
+
 	if [ ${__x:=0} -eq 0 ]; then
 		echo "Rendering RSS" >&2
 		RSS_DATE="$(date -R)"
