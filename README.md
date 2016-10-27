@@ -182,6 +182,7 @@ The headers in post indicate how Blash has to gerenerate your HTML :
 * `draft: `: When generating your post, Blash put your post in the `draft` directory if set to true, in `out` directory either.
 * `hidden: `: When generating your post, Blash put your post in the `hidden` directory if set to true, without any reference.
 * `summary: `: The summary is printed in the index (and could be added in the post).
+* `nomarkdown:` : When set to `true`, the post content is not considered as _Markdown_. So, content stay as is.
 * `sumprint: `: If set to true, the summary will be added in the beginning of the post (depends on your layout).
 
 ### Blash configuration
