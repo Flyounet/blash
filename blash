@@ -360,7 +360,9 @@ render() {
 render_file_case() {
 	case "$1" in
 	"$POST_DIR"/*)
-		perl -e "${MkDown}"
+		# nomarkdown var has been set in render_file
+		[[ "${nomarkdown,,}" != 'true' ]] && perl -e "${MkDown}" 
+		[[ "${nomarkdown,,}" = 'true' ]] && cat
 		;;
 	"$LAYOUT_DIR"/*)
 		render
@@ -542,6 +544,7 @@ post_post() {
 	layout: post
 	draft: true
 	hidden: false
+	nomarkdown: false
 	sumprint: 
 	summary: 
 	---
@@ -711,7 +714,9 @@ post_bake() {
 		fi
 		# Manage summary
 		if [ "${PRINT_ALL_SUMMARY}" = 'all' -o "${POSTS_HEADERS[post_${_lid}_sumprint],,}" = 'true' -a "${PRINT_ALL_SUMMARY}" = 'user' ]; then
-			declare -g SUMMARYPARSED="$(perl -e "${MkDown}" <<< "${POSTS_HEADERS[post_${_lid}_summary]}")"
+			declare -g SUMMARYPARSED="${POSTS_HEADERS[post_${_lid}_summary]}"
+			[[ "${POSTS_HEADERS[post_${_lid}_nomarkdown],,}" != 'true' ]] && \
+				declare -g SUMMARYPARSED="$(perl -e "${MkDown}" <<< "${POSTS_HEADERS[post_${_lid}_summary]}")"
 			export PRINTSUMMARY=true
 		else
 			unset PRINTSUMMARY
@@ -729,7 +734,12 @@ post_bake() {
 			declare -g "posts_${idx}_atomtag"="${ATOM_TAG},${_atomd%%-*}"
 		fi
 		export_headers "$post" "posts_${idx}_"
-		local lesum="posts_${idx}_summary";[[ ! -z "${!lesum}" ]] && declare -g "posts_${idx}_summary"="$(perl -e "${MkDown}" <<< "${POSTS_HEADERS[post_${_lid}_summary]}")"
+		local lesum="posts_${idx}_summary";
+		[[ ! -z "${!lesum}" ]] && {
+			declare -g "posts_${idx}_summary"="${POSTS_HEADERS[post_${_lid}_summary]}"
+			[[ "${POSTS_HEADERS[post_${_lid}_nomarkdown],,}" != 'true' ]] && \
+				declare -g "posts_${idx}_summary"="$(perl -e "${MkDown}" <<< "${POSTS_HEADERS[post_${_lid}_summary]}")"
+		}
 		POST_PREV="$id.html"
 		(( id_all++ ))
 		(( idx++ ))
