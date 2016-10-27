@@ -153,13 +153,15 @@ header() {
 	headers | sed -e '/^[[:space:]]*'"${1}"'[[:space:]]*:/!d;s/^[[:space:]]*'"${1}"'[[:space:]]*:[[:space:]]*\(.*\)/\1/g'
 }
 
-# get_headers Print headers for a post
+# get_headers : Print headers as an array for a post
+# get_headers : If an argument is set, it should be the filename
 get_headers() {
 	declare -A POST_HEADERS=()
 	while read h v; do
 		POST_HEADERS[${h}]="${v}"
 	done <<< "$( headers | sed -e '/^[[:space:]]*[#:].*[[:space:]]*:/d;s/^[[:space:]]*\([^:]*\)[[:space:]]*:[[:space:]]*\(.*\)/\1 \2/g' )"
-	POST_HEADERS[date-notz]="${POST_HEADERS[date]//[TZ]/ }"
+	[[ ! -z "${POST_HEADERS[date]:-}" ]] && POST_HEADERS[date-notz]="${POST_HEADERS[date]//[TZ]/ }"
+	[[ ! -z "${1:-}" && -e "${1}" ]] && { POST_HEADERS[_post_filename]="${1}"; POST_HEADERS[_post_filename_noext]="$(basename "${1}" '.md')"; }
 	echo "$(declare -p POST_HEADERS)"
 }
 
@@ -171,15 +173,18 @@ get_posts_headers() {
 	declare -a POSTS_HIDDEN=()
 	for _lid in ${!posts[@]}; do
 		declare -A POST_HEADERS=(); unset POST_HEADERS
-		eval "$(get_headers < "${posts[${_lid}]}")"
+		eval "$(get_headers "${posts[${_lid}]}" < "${posts[${_lid}]}")"
 		for _sub_lid in ${!POST_HEADERS[@]}; do
 			POSTS_HEADERS[post_${_lid}_${_sub_lid}]="${POST_HEADERS[${_sub_lid}]}"
 			[[ ! -z "${POSTS_HEADERS[post_${_lid}_draft]}" && "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'false' ]] && POSTS_DRAFT[${_lid}]=${_lid}
-			[[ ! -z "${POSTS_HEADERS[post_${_lid}_hidden]}" && "${POSTS_HEADERS[post_${_lid}_hidden],,}" != 'false' ]] && POSTS_HIDDEN[${_lid}]=${_lid}
+			[[ ! -z "${POSTS_HEADERS[post_${_lid}_hidden]}" && "${POSTS_HEADERS[post_${_lid}_hidden],,}" != 'false' ]] && {
+				[[ ! -z "${POSTS_HEADERS[post_${_lid}_draft]}" && "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'false' ]] || \
+					POSTS_HIDDEN[${_lid}]=${_lid}
+			}
 		done
 	done
 	echo "$(declare -p POSTS_DRAFT);"
-	echo "$(declare -p POSTS_HIDDEN);"
+	echo "$(declare -p POSTS_HIDDEN);"; # POSTS_HIDDEN only contains Hidden & !Draft
 	echo "$(declare -p POSTS_HEADERS);"
 #	echo "$(declare -p POSTS_HEADERS);$(declare -p POSTS_DRAFT);$(declare -p POSTS_HIDDEN)"
 }
@@ -635,6 +640,69 @@ _post_blash_prepare_dirs() {
 	[[ -d "${PUBLIC_DIR}" ]] && cp -r "${PUBLIC_DIR}"/. "${OUTPUT_DIR}"
 	[[ -d "${PUBLIC_DIR}" ]] && cp -r "${PUBLIC_DIR}"/. "${DRAFT_DIR}"
 	touch "${DRAFT_DIR}/index.html"
+	# shouldn't I have to manage HIDDEN_DIR ?
+}
+
+# _post_blash_print_status : Print the status (ID/postName/[Status]/[Tags]/Hidden)
+#                          : Mandatory first arg MUST be an id of a post (as delared in POSTS_HEADERS)
+_post_blash_print_status() {
+	[[ -z "${1:-}" || ! -z "${1//[0-9]/}" ]] && die "Internal error. I don't received a valid ID."
+	local _hidden=' \e[2m\e[31m/!\ HIDDEN /!\ \e[0m'
+	local _status='\e[31mDraft\e[0m'
+	[[ "${POSTS_HEADERS[post_${1}_hidden],,}" != 'true' ]] && _hidden=''
+	[[ "${POSTS_HEADERS[post_${1}_draft],,}" != 'true' ]] && local _status='\e[32mPublished\e[0m'
+	echo -e "${1} ${POSTS_HEADERS[post_${1}__post_filename_noext]} [${_status}] [${POSTS_HEADERS[post_${1}_tags]}]${_hidden}"
+}
+
+# _post_blash_summary_print : Set the ummary variable for a post.
+#                           : Mandatory first arg MUST be an id of a post (as delared in POSTS_HEADERS)
+_post_blash_summary_print() {
+	[[ -z "${1:-}" || ! -z "${1//[0-9]/}" ]] && die "Internal error. I don't received a valid ID."
+	if [ "${PRINT_ALL_SUMMARY}" = 'all' -o "${POSTS_HEADERS[post_${1}_sumprint],,}" = 'true' -a "${PRINT_ALL_SUMMARY}" = 'user' ]; then
+		declare -g SUMMARYPARSED="${POSTS_HEADERS[post_${1}_summary]}"
+		[[ "${POSTS_HEADERS[post_${1}_nomarkdown],,}" != 'true' ]] && \
+			declare -g SUMMARYPARSED="$(perl -e "${MkDown}" <<< "${POSTS_HEADERS[post_${1}_summary]}")"
+		export PRINTSUMMARY=true
+	else
+		unset PRINTSUMMARY
+	fi
+}
+
+# _post_blash_draft : Render the Draft Posts
+_post_blash_draft() {
+	if [ ${__Z:=0} -eq 0 -a ${#POSTS_DRAFT[@]} -ne 0 ]; then
+		echo -e "\n * Rendering Draft Posts..." >&2
+		local POST_PREV='index.html'; local POST_NEXT='index.html';
+		(
+		for _lid in ${!POSTS_DRAFT[@]}; do
+			_post_blash_summary_print ${_lid}
+			render_file "${POSTS_HEADERS[post_${_lid}__post_filename]}" > "${DRAFT_DIR}/${POSTS_HEADERS[post_${_lid}__post_filename_noext]}.html" &
+			copyPTT "${POSTS_HEADERS[post_${_lid}__post_filename]}" "${DRAFT_DIR}/${POSTS_HEADERS[post_${_lid}__post_filename_noext]}" &
+			_post_blash_print_status ${_lid}
+		done
+		) | column -t
+	else
+		echo -e "\n * Either no Draft Posts (or not allowed to work on)..." >&2
+	fi
+}
+
+# _post_blash_hidden : Render the Hidden Posts
+_post_blash_hidden() {
+	if [ ${__z:=0} -eq 0 -a ${#POSTS_HIDDEN[@]} -ne 0 ]; then
+		echo -e "\n * Rendering Hidden Posts..." >&2
+		local POST_PREV='index.html'; local POST_NEXT='index.html';
+		(
+		for _lid in ${!POSTS_HIDDEN[@]}; do
+			[[ "${POSTS_HEADERS[post_${_lid}_draft]}" != 'false' ]] && continue; # If this hidden is also draft, it has been already managed
+			_post_blash_summary_print ${_lid}
+			render_file "${POSTS_HEADERS[post_${_lid}__post_filename]}" > "${HIDDEN_DIR}/${POSTS_HEADERS[post_${_lid}__post_filename_noext]}.html" &
+			# We do not copy source of Hidden posts.
+			_post_blash_print_status ${_lid}
+		done
+		) | column -t
+	else
+		echo -e "\n * Either no Hidden Posts (or not allowed to work on)..." >&2
+	fi
 }
 
 # post_bake it's where the magic start
@@ -646,35 +714,37 @@ post_bake() {
 	# Getting list of all posts (files with .md extension) and all headers
 	readarray -t posts < <(find "${POST_DIR}" -name '*.md' | sort -r)
 	eval "$(get_posts_headers "$(declare -p posts)")"
-	if [ ${__Z:=0} -eq 0 -a ${#POSTS_DRAFT} -ne 0 ]; then
-		echo "Rendering Draft Posts..." >&2
-	else
-		echo "Either no Draft Posts (or not allowed to work on)..." >&2
-	fi
-	echo "Rendering Posts..." >&2
+
+	# Rendering Draft Posts
+	_post_blash_draft
+	# Rendering Hidden Posts
+	_post_blash_hidden
+#exit 1
+	echo -e "\n * Rendering Posts..." >&2
 	idx=0
 	id_all=0
 	_allTags=''
 	for _lid in "${!posts[@]}"; do
 		post="${posts[${_lid}]}"
-		[[ ${id_all} -eq 0 ]] && echo -e "id\t- Title\t[Tags]"
+		[[ ${id_all} -eq 0 ]] && echo -e "id\t- Title\t[status]\t[Tags]"
 		idx_prev=1;idx_next=1
 		id="$(basename "$post" .md)"
+		[[ "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'false' || "${POSTS_HEADERS[post_${_lid}_hidden],,}" = 'true' ]] && { (( id_all++ )); continue; }
 		# skip drafts
-		if [ "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'false' ]; then
-			(( id_all++ ))
-			POST_PREV='index.html';POST_NEXT='index.html';
-			render_file "$post" > "$DRAFT_DIR/$id.html" &
-			copyPTT "${post}" "${DRAFT_DIR}/${id}" &
-			continue
-		fi
-		if [ ${__z:=0} -eq 0 -a "${POSTS_HEADERS[post_${_lid}_hidden],,}" = 'true' ]; then
-			(( id_all++ ))
-			POST_PREV='index.html';POST_NEXT='index.html';
-			render_file "$post" > "$HIDDEN_DIR/$id.html" &
-			echo -e "${idx}\t- ${id}\t[${tags}] <--- HIDDEN"
-			continue
-		fi
+#		if [ "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'false' ]; then
+#			(( id_all++ ))
+#			POST_PREV='index.html';POST_NEXT='index.html';
+#			render_file "$post" > "$DRAFT_DIR/$id.html" &
+#			copyPTT "${post}" "${DRAFT_DIR}/${id}" &
+#			continue
+#		fi
+#		if [ ${__z:=0} -eq 0 -a "${POSTS_HEADERS[post_${_lid}_hidden],,}" = 'true' ]; then
+#			(( id_all++ ))
+#			POST_PREV='index.html';POST_NEXT='index.html';
+#			render_file "$post" > "$HIDDEN_DIR/$id.html" &
+#			echo -e "${idx}\t- ${id}\t[${tags}] <--- HIDDEN"
+#			continue
+#		fi
 		# copyPTT will not handle hidden posts.
 		copyPTT "${post}" "${BLASH_EXPORT_POST_TO_TEXT_OUTPUT_DIR}/${id}" &
 		if [ ${idx} -eq 0 ]; then # It's the first post, so the newer one is index
@@ -732,16 +802,18 @@ post_bake() {
 			unset tags
 		fi
 		# Manage summary
-		if [ "${PRINT_ALL_SUMMARY}" = 'all' -o "${POSTS_HEADERS[post_${_lid}_sumprint],,}" = 'true' -a "${PRINT_ALL_SUMMARY}" = 'user' ]; then
-			declare -g SUMMARYPARSED="${POSTS_HEADERS[post_${_lid}_summary]}"
-			[[ "${POSTS_HEADERS[post_${_lid}_nomarkdown],,}" != 'true' ]] && \
-				declare -g SUMMARYPARSED="$(perl -e "${MkDown}" <<< "${POSTS_HEADERS[post_${_lid}_summary]}")"
-			export PRINTSUMMARY=true
-		else
-			unset PRINTSUMMARY
-		fi
+		_post_blash_summary_print ${_lid}
+#		if [ "${PRINT_ALL_SUMMARY}" = 'all' -o "${POSTS_HEADERS[post_${_lid}_sumprint],,}" = 'true' -a "${PRINT_ALL_SUMMARY}" = 'user' ]; then
+#			declare -g SUMMARYPARSED="${POSTS_HEADERS[post_${_lid}_summary]}"
+#			[[ "${POSTS_HEADERS[post_${_lid}_nomarkdown],,}" != 'true' ]] && \
+#				declare -g SUMMARYPARSED="$(perl -e "${MkDown}" <<< "${POSTS_HEADERS[post_${_lid}_summary]}")"
+#			export PRINTSUMMARY=true
+#		else
+#			unset PRINTSUMMARY
+#		fi
 		# Render the post
-		echo -e "${idx}\t- ${id}\t[${POSTS_HEADERS[post_${_lid}_tags]}]"
+		_post_blash_print_status ${_lid}
+#		echo -e "${idx}\t- ${id}\t[${POSTS_HEADERS[post_${_lid}_tags]}]"
 		render_file "$post" > "$OUTPUT_DIR/$id.html" &
 		declare "posts_${idx}_id"="$id"
 		if [ ${__x:=0} -eq 0 ]; then # RSS datetime has to be RFC 822 compliant
