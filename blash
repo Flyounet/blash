@@ -31,7 +31,7 @@
 # \*------------------------------------------------------------------------*/
 
 
-VERSION='1.2.2'
+VERSION='1.2.3'
 
 findConfigFile() {
 	BLASH_DEFAULT_CONFIGDIR="${BLASH_DEFAULT_CONFIGDIR:=${XDG_CONFIG_HOME:=$HOME/.config}}"
@@ -924,8 +924,6 @@ readonly TAGS_LINK; readonly TAGS_BASELINK
 
 
 if [ ${__b} -eq 1 ]; then
-#	declare -A POST_HEADERS=()
-#	declare -x POST_HEADERS_STR="$(declare -p POST_HEADERS)"
 	post_bake
 elif [ ${__l} -eq 1 ]; then
 	post_list "${__g:=}"
