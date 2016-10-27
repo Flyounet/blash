@@ -153,6 +153,30 @@ header() {
 	headers | sed -e '/^[[:space:]]*'"${1}"'[[:space:]]*:/!d;s/^[[:space:]]*'"${1}"'[[:space:]]*:[[:space:]]*\(.*\)/\1/g'
 }
 
+# get_headers Print headers for a post
+get_headers() {
+	declare -A POST_HEADERS=()
+	while read h v; do
+		POST_HEADERS[${h}]="${v}"
+	done <<< "$( headers | sed -e '/^[[:space:]]*[#:].*[[:space:]]*:/d;s/^[[:space:]]*\([^:]*\)[[:space:]]*:[[:space:]]*\(.*\)/\1 \2/g' )"
+	POST_HEADERS[date-notz]="${POST_HEADERS[date]//[TZ]/ }"
+	echo "$(declare -p POST_HEADERS)"
+}
+
+# get_posts_headers Print all headers for all posts
+get_posts_headers() {
+	eval "${@}"
+	declare -A POSTS_HEADERS=()
+	for _lid in ${!posts[@]}; do
+		declare -A POST_HEADERS=(); unset POST_HEADERS
+		eval "$(get_headers < "${posts[${_lid}]}")"
+		for _sub_lid in ${!POST_HEADERS[@]}; do
+			POSTS_HEADERS[post_${_lid}_${_sub_lid}]="${POST_HEADERS[${_sub_lid}]}"
+		done
+	done
+	echo "$(declare -p POSTS_HEADERS);"
+}
+
 # body prints the body of a markdown file
 body() {
 	awk '/^---$/ { c++; next } c >= 2'
@@ -608,19 +632,21 @@ post_bake() {
 	idx=0
 	id_all=0
 	_allTags=''
-	for post in "${posts[@]}"; do
+	eval "$(get_posts_headers "$(declare -p posts)")"
+	for _lid in "${!posts[@]}"; do
+		post="${posts[${_lid}]}"
 		[[ ${id_all} -eq 0 ]] && echo -e "id\t- Title\t[Tags]"
 		idx_prev=1;idx_next=1
 		id="$(basename "$post" .md)"
 		# skip drafts
-		if [ "$(header draft < "$post")" != false ]; then
+		if [ "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'false' ]; then
 			(( id_all++ ))
 			POST_PREV='index.html';POST_NEXT='index.html';
 			render_file "$post" > "$DRAFT_DIR/$id.html" &
 			copyPTT "${post}" "${DRAFT_DIR}/${id}" &
 			continue
 		fi
-		if [ ${__z:=0} -eq 0 -a "$(header hidden < "$post")" = true ]; then
+		if [ ${__z:=0} -eq 0 -a "${POSTS_HEADERS[post_${_lid}_hidden],,}" = 'true' ]; then
 			(( id_all++ ))
 			POST_PREV='index.html';POST_NEXT='index.html';
 			render_file "$post" > "$HIDDEN_DIR/$id.html" &
@@ -632,69 +658,78 @@ post_bake() {
 		if [ ${idx} -eq 0 ]; then # It's the first post, so the newer one is index
 			id_prev=0
 		else # search for the previous post not draft
-			while [ -f "${posts[$((id_all-idx_prev))]}" -a "$(header draft < "${posts[$((id_all-idx_prev))]}" 2>/dev/null)" != false ]; do
+			while [ -f "${posts[$((id_all-idx_prev))]}" -a "${POSTS_HEADERS[post_$((id_all-idx_prev))_draft],,}" != 'false' ]; do
 				(( idx_prev++ ))
 				if [ ${idx_prev} -gt ${id_all} ]; then idx_prev=${id_all}; break; fi
 			done 2>/dev/null
 		fi
 		# look for the next older post not draft
-		while [ -f "${posts[$((id_all+idx_next))]}" -a "$(header draft < "${posts[$((id_all+idx_next))]}" 2>/dev/null)" != false ]; do
+		while [ -f "${posts[$((id_all+idx_next))]}" -a "${POSTS_HEADERS[post_$((id_all+idx_next))_draft],,}" != 'false' ]; do
 			(( idx_next++ ))
 		done 2>/dev/null
 
 		if [ ${idx} -eq 0 -o $((idx_all-idx_prev)) -eq 0 -a ${id_all} -eq 0 ]; then
 			POST_PREV="index.html"
-			declare -g "posts_${idx}_NEWSECTION"=true; declare -g "posts_${idx}_NEWDATE"=true;  declare -g "posts_${idx}_newdate"="$(date --date="$(header date < "$post" | tr "TZ" "  ")" "${BLASH_TIMELINE_RENDERER}")";
+			declare -g "posts_${idx}_NEWSECTION"=true; declare -g "posts_${idx}_NEWDATE"=true;  declare -g "posts_${idx}_newdate"="$(date --date="${POSTS_HEADERS[post_${_lid}_date-notz]}" "${BLASH_TIMELINE_RENDERER}")";
 		else
 			POST_PREV="$( basename "${posts[$((id_all-idx_prev))]}" )"
 			POST_PREV="${POST_PREV%*.md}.html"
 			unset NEWSECTION; unset NEWDATE
 			declare -g "posts_${idx}_NEWSECTION"=''; declare -g "posts_${idx}_NEWDATE"=''
-			[[ ${idx} -eq 0 || "$(date --date="$(header date < "$post" | tr "TZ" "  ")" "${BLASH_TIMELINE_COMPARATOR}")" != "$(date --date="$(header date < "${posts[$((id_all-idx_prev))]}" | tr "TZ" "  ")" "${BLASH_TIMELINE_COMPARATOR}")" ]] && { declare -g "posts_${idx}_NEWSECTION"=true; declare -g "posts_${idx}_NEWDATE"=true;  declare -g "posts_${idx}_newdate"="$(date --date="$(header date < "$post" | tr "TZ" "  ")" "${BLASH_TIMELINE_RENDERER}")";}
+			[[ 	${idx} -eq 0 || \
+				"$(date --date="${POSTS_HEADERS[post_${_lid}_date-notz]}" "${BLASH_TIMELINE_COMPARATOR}")" != \
+				"$(date --date="${POSTS_HEADERS[post_$((id_all-idx_prev))_date-notz],,}" "${BLASH_TIMELINE_COMPARATOR}")" \
+			]] && {
+				declare -g "posts_${idx}_NEWSECTION"=true
+				declare -g "posts_${idx}_NEWDATE"=true
+				declare -g "posts_${idx}_newdate"="$(date --date="${POSTS_HEADERS[post_${_lid}_date-notz]}" "${BLASH_TIMELINE_RENDERER}")"
+			}
 		fi
 		POST_NEXT="$( basename "${posts[$((id_all+idx_next))]}" )"
 		[[ -z "${POST_PREV:=}" ]] && POST_PREV='index.html'
 		[[ -z "${POST_NEXT:=}" ]] && POST_NEXT='index.md'
 		unset NEWENDSECTION;
 		declare -g "posts_${idx}_NEWENDSECTION"=''
-		[[ $((id_all+idx_next)) -eq ${#posts[@]} || "$(date --date="$(header date < "$post" | tr "TZ" "  ")" "${BLASH_TIMELINE_COMPARATOR}")" != "$(date --date="$(header date < "${posts[$((id_all+idx_next))]}" | tr "TZ" "  ")" "${BLASH_TIMELINE_COMPARATOR}")" ]] && declare -g "posts_${idx}_NEWENDSECTION"=true
+		[[ 	$((id_all+idx_next)) -eq ${#posts[@]} || \
+			"$(date --date="${POSTS_HEADERS[post_${_lid}_date-notz]}" "${BLASH_TIMELINE_COMPARATOR}")" != \
+			"$(date --date="${POSTS_HEADERS[post_$((id_all+idx_next))_date-notz],,}" "${BLASH_TIMELINE_COMPARATOR}")" \
+		]] && declare -g "posts_${idx}_NEWENDSECTION"=true
 		POST_NEXT="${POST_NEXT%*.md}.html"
 		# look for the tags
 		if [ ${__t:=0} -eq 0 ]; then # When implemented the -c will avoid tags generation
 			local _tag=''; TAGSLIST=''
-			tags="$(header tags < "$post")"
-			if [ ! -z "${tags}" ]; then
+			if [ ! -z "${POSTS_HEADERS[post_${_lid}_tags]}" ]; then
 				while read _tag; do
 					TAGSLIST="${TAGSLIST}${TAGS_LINK//==tagNameSlugged==/$(slug <<< "${_tag}")}"
 					TAGSLIST="${TAGSLIST//==tagName==/${_tag}}"
 					_allTags="${_allTags//${_tag},/}${_tag},"
-				done <<< "$(echo -e "${tags//,/\\n}")"
+				done <<< "$(echo -e "${POSTS_HEADERS[post_${_lid}_tags]//,/\\n}")"
 			fi
 		else
 			unset TAGSLIST
 			unset tags
 		fi
 		# Manage summary
-		if [ "${PRINT_ALL_SUMMARY}" = 'all' -o "$(header sumprint < "${post}")" = 'true' -a "${PRINT_ALL_SUMMARY}" = 'user' ]; then
-			declare -g SUMMARYPARSED="$(perl -e "${MkDown}" <<< "$(header summary < "${post}")")"
+		if [ "${PRINT_ALL_SUMMARY}" = 'all' -o "${POSTS_HEADERS[post_${_lid}_sumprint],,}" = 'true' -a "${PRINT_ALL_SUMMARY}" = 'user' ]; then
+			declare -g SUMMARYPARSED="$(perl -e "${MkDown}" <<< "${POSTS_HEADERS[post_${_lid}_summary]}")"
 			export PRINTSUMMARY=true
 		else
 			unset PRINTSUMMARY
 		fi
 		# Render the post
-		echo -e "${idx}\t- ${id}\t[${tags}]"
+		echo -e "${idx}\t- ${id}\t[${POSTS_HEADERS[post_${_lid}_tags]}]"
 		render_file "$post" > "$OUTPUT_DIR/$id.html" &
 		declare "posts_${idx}_id"="$id"
 		if [ ${__x:=0} -eq 0 ]; then # RSS datetime has to be RFC 822 compliant
-			declare -g "posts_${idx}_rssdate"="$(date -R --date "$(header date < "$post")")"
+			declare -g "posts_${idx}_rssdate"="$(date -R --date "${POSTS_HEADERS[post_${_lid}_date-notz]}")"
 		fi
 		if [ ${__X:=0} -eq 0 ]; then # Atom datetime has to be RFC 822 compliant
-			local _atomd="$(header date < "$post")"
+			local _atomd="${POSTS_HEADERS[post_${_lid}_date-notz]}"
 			declare -g "posts_${idx}_atomdate"="${_atomd}"
 			declare -g "posts_${idx}_atomtag"="${ATOM_TAG},${_atomd%%-*}"
 		fi
 		export_headers "$post" "posts_${idx}_"
-		local lesum="posts_${idx}_summary";[[ ! -z "${!lesum}" ]] && declare -g "posts_${idx}_summary"="$(perl -e "${MkDown}" <<< "$(header summary < "${post}")")"
+		local lesum="posts_${idx}_summary";[[ ! -z "${!lesum}" ]] && declare -g "posts_${idx}_summary"="$(perl -e "${MkDown}" <<< "${POSTS_HEADERS[post_${_lid}_summary]}")"
 		POST_PREV="$id.html"
 		(( id_all++ ))
 		(( idx++ ))
@@ -725,19 +760,19 @@ post_bake() {
 			while read a; do unset "${a}"; done <<< "$(compgen  -v | grep -E "^posts_[0-9]")"
 			idx=0
 			id_all=0
-			for post in "${posts[@]}"; do
+			for _lid in "${!posts[@]}"; do
+				post="${posts[${_lid}]}"
 				id="$(basename "$post" .md)"
-				if [ "$(header draft < "$post")" != false ]; then continue; fi
-				tags="$(header tags < "$post")"
-				if [ ! -z "${tags}" ]; then
+				if [ "${POSTS_HEADERS[post_${_lid}_draft]}" != 'false' ]; then continue; fi
+				if [ ! -z "${POSTS_HEADERS[post_${_lid}_tags]}" ]; then
 					while read _tag; do
 						if [ "${_tag}" = "${_tagIdx}" ] ; then
 							declare "posts_${idx}_id"="$id"
 							export_headers "$post" "posts_${idx}_"
-							local lesum="posts_${idx}_summary";[[ ! -z "${!lesum}" ]] && declare -g "posts_${idx}_summary"="$(perl -e "${MkDown}" <<< "$(header summary < "${post}")")"
+							local lesum="posts_${idx}_summary";[[ ! -z "${!lesum}" ]] && declare -g "posts_${idx}_summary"="$(perl -e "${MkDown}" <<< "${POSTS_HEADERS[post_${_lid}_summary]}")"
 							(( idx++ ))
 						fi
-					done <<< "$(echo -e "${tags//,/\\n}")"
+					done <<< "$(echo -e "${POSTS_HEADERS[post_${_lid}_tags]//,/\\n}")"
 				fi
 			done
 			render_file "$LAYOUT_DIR/${TAGS_LAYOUT}" > "$OUTPUT_DIR/index_$(slug <<< "${_tagIdx}").html" &
@@ -889,6 +924,8 @@ readonly TAGS_LINK; readonly TAGS_BASELINK
 
 
 if [ ${__b} -eq 1 ]; then
+#	declare -A POST_HEADERS=()
+#	declare -x POST_HEADERS_STR="$(declare -p POST_HEADERS)"
 	post_bake
 elif [ ${__l} -eq 1 ]; then
 	post_list "${__g:=}"
