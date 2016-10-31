@@ -173,21 +173,27 @@ get_posts_headers() {
 	declare -A POSTS_HEADERS=()
 	declare -a POSTS_DRAFT=()
 	declare -a POSTS_HIDDEN=()
+	declare -a POSTS_PUBLISHED=()
+	local _x=0
 	for _lid in ${!posts[@]}; do
 		declare -A POST_HEADERS=(); unset POST_HEADERS
 		eval "$(get_headers "${posts[${_lid}]}" < "${posts[${_lid}]}")"
 		for _sub_lid in ${!POST_HEADERS[@]}; do
 			POSTS_HEADERS[post_${_lid}_${_sub_lid}]="${POST_HEADERS[${_sub_lid}]}"
-			[[ ! -z "${POSTS_HEADERS[post_${_lid}_draft]}" && "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'false' ]] && POSTS_DRAFT[${_lid}]=${_lid}
-			[[ ! -z "${POSTS_HEADERS[post_${_lid}_hidden]}" && "${POSTS_HEADERS[post_${_lid}_hidden],,}" != 'false' ]] && {
-				[[ ! -z "${POSTS_HEADERS[post_${_lid}_draft]}" && "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'false' ]] || \
-					POSTS_HIDDEN[${_lid}]=${_lid}
-			}
 		done
+		[[ ! -z "${POSTS_HEADERS[post_${_lid}_draft]}" && "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'false' ]] && { POSTS_DRAFT[${_lid}]=${_lid}; continue; }
+		[[ ! -z "${POSTS_HEADERS[post_${_lid}_hidden]}" && "${POSTS_HEADERS[post_${_lid}_hidden],,}" != 'false' ]] && {
+			[[ ! -z "${POSTS_HEADERS[post_${_lid}_draft]}" && "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'false' ]] || \
+				POSTS_HIDDEN[${_lid}]=${_lid}
+				continue;
+		}
+		POSTS_PUBLISHED[${_x}]="${_lid}"
+		((_x++));
 	done
 	echo "$(declare -p POSTS_DRAFT);"
 	echo "$(declare -p POSTS_HIDDEN);"; # POSTS_HIDDEN only contains Hidden & !Draft
 	echo "$(declare -p POSTS_HEADERS);"
+	echo "$(declare -p POSTS_PUBLISHED);"
 #	echo "$(declare -p POSTS_HEADERS);$(declare -p POSTS_DRAFT);$(declare -p POSTS_HIDDEN)"
 }
 
@@ -723,7 +729,7 @@ post_bake() {
 	_post_blash_draft
 	# Rendering Hidden Posts
 	_post_blash_hidden
-#exit 1
+
 	echo -e "\n * Rendering Posts..." >&2
 	idx=0
 	id_all=0
@@ -732,26 +738,9 @@ post_bake() {
 		post="${posts[${_lid}]}"
 		[[ ${id_all} -eq 0 ]] && echo -e "id\t- Title\t[status]\t[Tags]"
 		idx_prev=1;idx_next=1
-#		id="$(basename "$post" .md)"
 		[[ "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'false' || "${POSTS_HEADERS[post_${_lid}_hidden],,}" = 'true' ]] && { (( id_all++ )); continue; }
-		# skip drafts
-#		if [ "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'false' ]; then
-#			(( id_all++ ))
-#			POST_PREV='index.html';POST_NEXT='index.html';
-#			render_file "$post" > "$DRAFT_DIR/$id.html" &
-#			copyPTT "${post}" "${DRAFT_DIR}/${id}" &
-#			continue
-#		fi
-#		if [ ${__z:=0} -eq 0 -a "${POSTS_HEADERS[post_${_lid}_hidden],,}" = 'true' ]; then
-#			(( id_all++ ))
-#			POST_PREV='index.html';POST_NEXT='index.html';
-#			render_file "$post" > "$HIDDEN_DIR/$id.html" &
-#			echo -e "${idx}\t- ${id}\t[${tags}] <--- HIDDEN"
-#			continue
-#		fi
 		# copyPTT will not handle hidden posts.
 		copyPTT "${post}" "${BLASH_EXPORT_POST_TO_TEXT_OUTPUT_DIR}/${POSTS_HEADERS[post_${_lid}__post_filename_noext]}" &
-#		copyPTT "${post}" "${BLASH_EXPORT_POST_TO_TEXT_OUTPUT_DIR}/${id}" &
 		if [ ${idx} -eq 0 ]; then # It's the first post, so the newer one is index
 			id_prev=0
 		else # search for the previous post not draft
@@ -808,20 +797,10 @@ post_bake() {
 		fi
 		# Manage summary
 		_post_blash_summary_print ${_lid}
-#		if [ "${PRINT_ALL_SUMMARY}" = 'all' -o "${POSTS_HEADERS[post_${_lid}_sumprint],,}" = 'true' -a "${PRINT_ALL_SUMMARY}" = 'user' ]; then
-#			declare -g SUMMARYPARSED="${POSTS_HEADERS[post_${_lid}_summary]}"
-#			[[ "${POSTS_HEADERS[post_${_lid}_nomarkdown],,}" != 'true' ]] && \
-#				declare -g SUMMARYPARSED="$(perl -e "${MkDown}" <<< "${POSTS_HEADERS[post_${_lid}_summary]}")"
-#			export PRINTSUMMARY=true
-#		else
-#			unset PRINTSUMMARY
-#		fi
 		_post_blash_print_status ${_lid}
-#		echo -e "${idx}\t- ${id}\t[${POSTS_HEADERS[post_${_lid}_tags]}]"
 		# Render the post
 		render_file "$post" > "$OUTPUT_DIR/$id.html" &
 		declare "posts_${idx}_id"="${POSTS_HEADERS[post_${_lid}__post_filename_noext]}"
-#		declare "posts_${idx}_id"="$id"
 		if [ ${__x:=0} -eq 0 ]; then # RSS datetime has to be RFC 822 compliant
 			declare -g "posts_${idx}_rssdate"="$(date -R --date "${POSTS_HEADERS[post_${_lid}_date-notz]}")"
 		fi
@@ -836,7 +815,6 @@ post_bake() {
 			declare -g "posts_${idx}_summary"="${POSTS_HEADERS[post_${_lid}_summary]}"
 			[[ "${POSTS_HEADERS[post_${_lid}_nomarkdown],,}" != 'true' ]] && \
 				declare -g "posts_${idx}_summary"="${POSTS_HEADERS[post_${_lid}_summary_markdown]}"
-#				declare -g "posts_${idx}_summary"="$(perl -e "${MkDown}" <<< "${POSTS_HEADERS[post_${_lid}_summary]}")"
 		}
 		POST_PREV="$id.html"
 		(( id_all++ ))
@@ -875,15 +853,12 @@ post_bake() {
 			id_all=0
 			for _lid in "${!posts[@]}"; do
 				post="${posts[${_lid}]}"
-#				id="$(basename "$post" .md)"
 				if [ "${POSTS_HEADERS[post_${_lid}_draft]}" != 'false' ]; then continue; fi
 				if [ ! -z "${POSTS_HEADERS[post_${_lid}_tags]}" ]; then
 					while read _tag; do
 						if [ "${_tag}" = "${_tagIdx}" ] ; then
 							declare "posts_${idx}_id"="${POSTS_HEADERS[post_${_lid}__post_filename_noext]}"
-#							declare "posts_${idx}_id"="$id"
 							export_headers "$post" "posts_${idx}_"
-#							local lesum="posts_${idx}_summary";[[ ! -z "${!lesum}" ]] && declare -g "posts_${idx}_summary"="$(perl -e "${MkDown}" <<< "${POSTS_HEADERS[post_${_lid}_summary]}")"
 							local lesum="posts_${idx}_summary";[[ ! -z "${!lesum}" ]] && declare -g "posts_${idx}_summary"="${POSTS_HEADERS[post_${_lid}_summary_markdown]}"
 							(( idx++ ))
 						fi
