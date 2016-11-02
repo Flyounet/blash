@@ -710,7 +710,7 @@ _post_blash_hidden() {
 		done
 		) | column -t
 	else
-		echo -e "\n * Hidden Posts : No post or or not allowed to work on..." >&2
+		echo -e "\n * Hidden Posts : No post or not allowed to work on..." >&2
 	fi
 }
 
