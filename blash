@@ -671,7 +671,6 @@ _post_blash_summary_print() {
 		declare -g SUMMARYPARSED="${POSTS_HEADERS[post_${1}_summary]}"
 		[[ "${POSTS_HEADERS[post_${1}_nomarkdown],,}" != 'true' ]] && \
 			declare -g SUMMARYPARSED="${POSTS_HEADERS[post_${1}_summary_markdown]}"
-#			declare -g SUMMARYPARSED="$(perl -e "${MkDown}" <<< "${POSTS_HEADERS[post_${1}_summary]}")"
 		export PRINTSUMMARY=true
 	else
 		unset PRINTSUMMARY
@@ -734,50 +733,26 @@ _post_blash_is_new_section() {
 	local _curr=${POSTS_HEADERS[post_${1}__logicalid]};
 	local _prev; (( _prev=${_curr} - 1 ));
 	local _next; (( _next=${_curr} + 1 ));
-#	local _prev; (( _prev=${POSTS_HEADERS[post_${1}__logicalid]} - 1 ));
-#	local _next; (( _next=${POSTS_HEADERS[post_${1}__logicalid]} + 1 ));
-echo "-------------------------------------------------------------" >&2
-echo "\$1=$1" >&2
-echo "_prev : ${_prev}/${POSTS_PUBLISHED[${_prev}]} - ${POSTS_HEADERS[post_${POSTS_PUBLISHED[${_prev}]}_date-notz]} / $(date --date="${POSTS_HEADERS[post_${POSTS_PUBLISHED[${_prev}]}_date-notz]}" "${BLASH_TIMELINE_COMPARATOR}") -> ${POSTS_HEADERS[post_${POSTS_PUBLISHED[${_prev}]}__post_filename_noext]}" >&2
-echo "_noww : ${_curr}/${POSTS_PUBLISHED[${_curr}]} - ${POSTS_HEADERS[post_${1}_date-notz]} / $(date --date="${POSTS_HEADERS[post_${1}_date-notz]}" "${BLASH_TIMELINE_COMPARATOR}") -> ${POSTS_HEADERS[post_${1}__post_filename_noext]}" >&2
-echo "_next : ${_next}/${POSTS_PUBLISHED[${_next}]} - ${POSTS_HEADERS[post_${POSTS_PUBLISHED[${_next}]}_date-notz]} / $(date --date="${POSTS_HEADERS[post_${POSTS_PUBLISHED[${_next}]}_date-notz]}" "${BLASH_TIMELINE_COMPARATOR}") -> ${POSTS_HEADERS[post_${POSTS_PUBLISHED[${_next}]}__post_filename_noext]}" >&2
-echo "-------------------------------------------------------------" >&2
 	# To be used by the @each as First item must be 0
 	(( _curr=_curr - 1 ))
 	unset NEWSECTION; unset NEWDATE
-#	declare -g "posts_${1}_NEWSECTION"=''; declare -g "posts_${1}_NEWDATE"=''
 	declare -g "posts_${_curr}_NEWSECTION"=''; declare -g "posts_${_curr}_NEWDATE"=''
 	[[	${1} -eq 0 || ${_prev} -eq 0 || \
 		"$(date --date="${POSTS_HEADERS[post_${1}_date-notz]}" "${BLASH_TIMELINE_COMPARATOR}")" != \
 		"$(date --date="${POSTS_HEADERS[post_${POSTS_PUBLISHED[${_prev}]}_date-notz]}" "${BLASH_TIMELINE_COMPARATOR}")" \
 	]] && {
-#set -xv
-#	 	declare -g "posts_${1}_NEWSECTION"=true
-#		declare -g "posts_${1}_NEWDATE"=true
-#		declare -g "posts_${1}_newdate"="$(date --date="${POSTS_HEADERS[post_${1}_date-notz]}" "${BLASH_TIMELINE_RENDERER}")"
 	 	declare -g "posts_${_curr}_NEWSECTION"=true
 		declare -g "posts_${_curr}_NEWDATE"=true
 		declare -g "posts_${_curr}_newdate"="$(date --date="${POSTS_HEADERS[post_${1}_date-notz]}" "${BLASH_TIMELINE_RENDERER}")"
-echo "posts_${_curr}_NEWSECTION=true" >&2
-set +xv
 	}
 	unset NEWENDSECTION;
-#	declare -g "posts_${1}_NEWENDSECTION"=''
 	declare -g "posts_${_curr}_NEWENDSECTION"=''
-set -xv
-#	[[ ${1} -eq ${#POSTS_PUBLISHED[@]} || ${_next} -gt ${#POSTS_PUBLISHED[@]} || \
 	[[ ${POSTS_HEADERS[post_${1}__logicalid]} -eq ${#POSTS_PUBLISHED[@]} || ${_next} -gt ${#POSTS_PUBLISHED[@]} || \
 		"$(date --date="${POSTS_HEADERS[post_${1}_date-notz]}" "${BLASH_TIMELINE_COMPARATOR}")" != \
 		"$(date --date="${POSTS_HEADERS[post_${POSTS_PUBLISHED[${_next}]}_date-notz]}" "${BLASH_TIMELINE_COMPARATOR}")" \
 	]] && {
-#set -xv
-#	 	declare -g "posts_${1}_NEWENDSECTION"=true
-echo "posts_${_curr}_NEWENDSECTION=true" >&2
 	 	declare -g "posts_${_curr}_NEWENDSECTION"=true
-set +xv
 	}
-set +xv
-
 }
 
 # post_bake it's where the magic start
@@ -814,46 +789,6 @@ post_bake() {
 		# Getting new Section
 		_post_blash_is_new_section "${_lid}"
 
-#		if [ ${idx} -eq 0 ]; then # It's the first post, so the newer one is index
-#			id_prev=0
-#		else # search for the previous post not draft
-#			while [ -f "${posts[$((id_all-idx_prev))]}" -a "${POSTS_HEADERS[post_$((id_all-idx_prev))_draft],,}" != 'false' ]; do
-#				(( idx_prev++ ))
-#				if [ ${idx_prev} -gt ${id_all} ]; then idx_prev=${id_all}; break; fi
-#			done 2>/dev/null
-#		fi
-#		# look for the next older post not draft
-#		while [ -f "${posts[$((id_all+idx_next))]}" -a "${POSTS_HEADERS[post_$((id_all+idx_next))_draft],,}" != 'false' ]; do
-#			(( idx_next++ ))
-#		done 2>/dev/null
-#
-#		if [ ${idx} -eq 0 -o $((idx_all-idx_prev)) -eq 0 -a ${id_all} -eq 0 ]; then
-##			POST_PREV="index.html"
-#			declare -g "posts_${idx}_NEWSECTION"=true; declare -g "posts_${idx}_NEWDATE"=true;  declare -g "posts_${idx}_newdate"="$(date --date="${POSTS_HEADERS[post_${_lid}_date-notz]}" "${BLASH_TIMELINE_RENDERER}")";
-#		else
-##			POST_PREV="$( basename "${posts[$((id_all-idx_prev))]}" )"
-##			POST_PREV="${POST_PREV%*.md}.html"
-#			unset NEWSECTION; unset NEWDATE
-#			declare -g "posts_${idx}_NEWSECTION"=''; declare -g "posts_${idx}_NEWDATE"=''
-#			[[ 	${idx} -eq 0 || \
-#				"$(date --date="${POSTS_HEADERS[post_${_lid}_date-notz]}" "${BLASH_TIMELINE_COMPARATOR}")" != \
-#				"$(date --date="${POSTS_HEADERS[post_$((id_all-idx_prev))_date-notz],,}" "${BLASH_TIMELINE_COMPARATOR}")" \
-#			]] && {
-#				declare -g "posts_${idx}_NEWSECTION"=true
-#				declare -g "posts_${idx}_NEWDATE"=true
-#				declare -g "posts_${idx}_newdate"="$(date --date="${POSTS_HEADERS[post_${_lid}_date-notz]}" "${BLASH_TIMELINE_RENDERER}")"
-#			}
-#		fi
-##		POST_NEXT="$( basename "${posts[$((id_all+idx_next))]}" )"
-##		[[ -z "${POST_PREV:=}" ]] && POST_PREV='index.html'
-##		[[ -z "${POST_NEXT:=}" ]] && POST_NEXT='index.md'
-#		unset NEWENDSECTION;
-#		declare -g "posts_${idx}_NEWENDSECTION"=''
-#		[[ 	$((id_all+idx_next)) -eq ${#posts[@]} || \
-#			"$(date --date="${POSTS_HEADERS[post_${_lid}_date-notz]}" "${BLASH_TIMELINE_COMPARATOR}")" != \
-#			"$(date --date="${POSTS_HEADERS[post_$((id_all+idx_next))_date-notz],,}" "${BLASH_TIMELINE_COMPARATOR}")" \
-#		]] && declare -g "posts_${idx}_NEWENDSECTION"=true
-##		POST_NEXT="${POST_NEXT%*.md}.html"
 		# look for the tags
 		if [ ${__t:=0} -eq 0 ]; then # When implemented the -c will avoid tags generation
 			local _tag=''; TAGSLIST=''
@@ -871,49 +806,24 @@ post_bake() {
 		# Manage summary
 		_post_blash_summary_print ${_lid}
 		_post_blash_print_status ${_lid}
-#echo "--------------------------------------" >&2
-#echo $POST_PREV >&2
-#_post_blash_get_previous_post "${_lid}" >&2
-#echo -e "\n--------------------------------------" >&2
-#echo $POST_NEXT >&2
-#_post_blash_get_next_post "${_lid}" >&2
-#echo -e "\n--------------------------------------" >&2
 
 		# Render the post
 		render_file "${post}" > "${OUTPUT_DIR}/${POSTS_HEADERS[post_${_lid}__post_filename_noext]}.html" &
 		local _id4each; (( _id4each=${POSTS_HEADERS[post_${_lid}__logicalid]} - 1 ))
-#		declare "posts_${idx}_id"="${POSTS_HEADERS[post_${_lid}__post_filename_noext]}"
-#		declare "posts_${POSTS_HEADERS[post_${_lid}__logicalid]}_id"="${POSTS_HEADERS[post_${_lid}__post_filename_noext]}"
 		declare "posts_${_id4each}_id"="${POSTS_HEADERS[post_${_lid}__post_filename_noext]}"
 		if [ ${__x:=0} -eq 0 ]; then # RSS datetime has to be RFC 822 compliant
-#			declare -g "posts_${idx}_rssdate"="$(date -R --date "${POSTS_HEADERS[post_${_lid}_date-notz]}")"
-#			declare -g "posts_${POSTS_HEADERS[post_${_lid}__logicalid]}_rssdate"="$(date -R --date "${POSTS_HEADERS[post_${_lid}_date-notz]}")"
 			declare -g "posts_${_id4each}_rssdate"="$(date -R --date "${POSTS_HEADERS[post_${_lid}_date-notz]}")"
 		fi
 		if [ ${__X:=0} -eq 0 ]; then # Atom datetime has to be RFC 822 compliant
 			local _atomd="${POSTS_HEADERS[post_${_lid}_date-notz]}"
-#			declare -g "posts_${idx}_atomdate"="${_atomd}"
-#			declare -g "posts_${idx}_atomtag"="${ATOM_TAG},${_atomd%%-*}"
-#			declare -g "posts_${POSTS_HEADERS[post_${_lid}__logicalid]}_atomdate"="${_atomd}"
-#			declare -g "posts_${POSTS_HEADERS[post_${_lid}__logicalid]}_atomtag"="${ATOM_TAG},${_atomd%%-*}"
 			declare -g "posts_${_id4each}_atomdate"="${_atomd}"
 			declare -g "posts_${_id4each}_atomtag"="${ATOM_TAG},${_atomd%%-*}"
 		fi
-#		export_headers "$post" "posts_${idx}_"
-#set -xv
-#		export_headers "$post" "posts_${POSTS_HEADERS[post_${_lid}__logicalid]}_"
 		export_headers "$post" "posts_${_id4each}_"
-set +xv
-#		local lesum="posts_${idx}_summary";
-#		local lesum="posts_${POSTS_HEADERS[post_${_lid}__logicalid]}_summary";
 		local lesum="posts_${_id4each}_summary";
 		[[ ! -z "${!lesum}" ]] && {
-#			declare -g "posts_${idx}_summary"="${POSTS_HEADERS[post_${_lid}_summary]}"
-#			declare -g "posts_${POSTS_HEADERS[post_${_lid}__logicalid]}_summary"="${POSTS_HEADERS[post_${_lid}_summary]}"
 			declare -g "posts_${_id4each}_summary"="${POSTS_HEADERS[post_${_lid}_summary]}"
 			[[ "${POSTS_HEADERS[post_${_lid}_nomarkdown],,}" != 'true' ]] && \
-#				declare -g "posts_${idx}_summary"="${POSTS_HEADERS[post_${_lid}_summary_markdown]}"
-#				declare -g "posts_${POSTS_HEADERS[post_${_lid}__logicalid]}_summary"="${POSTS_HEADERS[post_${_lid}_summary_markdown]}"
 				declare -g "posts_${_id4each}_summary"="${POSTS_HEADERS[post_${_lid}_summary_markdown]}"
 		}
 		POST_PREV="$id.html"
@@ -938,7 +848,7 @@ set +xv
 		wait
 	fi
 	# Generating the index.html
-(for iii in $(compgen  -v | grep -E "^posts_[0-9]" | sort -n -k2 -t_); do echo "${iii}=${!iii}"; done)
+#(for iii in $(compgen  -v | grep -E "^posts_[0-9]" | sort -n -k2 -t_); do echo "${iii}=${!iii}"; done)
 	export GENERATE_INDEX=true
 	echo "Rendering Index..." >&2
 	render_file "$LAYOUT_DIR/index.md" > "$OUTPUT_DIR/index.html" &
