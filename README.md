@@ -115,7 +115,7 @@ Directives are :
 - `@include file` : Include part (only content) of a template file. You don't need to add the `.md`, it's added automatically. See example above.
 - `@if variable ... @end` : If the variable exists then the content of `@if ... @end` is added to the template. See example above.
 - `@if !variable ... @end` : If the variable doesn't exist (or is empty) then the content of `@if ... @end` is added to the template. Space is **not** allowed between `!` and the _variable_.
-- `@each variable ... @end` : _variable_ MUST be an array. Iterate on the content of the array. See example below.
+- `@each variable ... @end` : _variable_ MUST be an array. Iterate on the content of the array. See example below. The first array key MUST be numbered from _`0`_.
 - `@cmd ... @end` : Execute the shell code, and embbed the `stdout`. Be aware that this could have impact on your workstation/server. See example below.
 
 #### Templates : Directives examples
