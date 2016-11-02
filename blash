@@ -680,7 +680,7 @@ _post_blash_summary_print() {
 # _post_blash_draft : Render the Draft Posts
 _post_blash_draft() {
 	if [ ${__Z:=0} -eq 0 -a ${#POSTS_DRAFT[@]} -ne 0 ]; then
-		echo -e "\n * Rendering Draft Posts..." >&2
+		echo -e "\n * Draft Posts : Rendering..." >&2
 		local POST_PREV='index.html'; local POST_NEXT='index.html';
 		(
 		for _lid in ${!POSTS_DRAFT[@]}; do
@@ -691,14 +691,14 @@ _post_blash_draft() {
 		done
 		) | column -t
 	else
-		echo -e "\n * Either no Draft Posts (or not allowed to work on)..." >&2
+		echo -e "\n * Draft Posts : No post or not allowed to work on..." >&2
 	fi
 }
 
 # _post_blash_hidden : Render the Hidden Posts
 _post_blash_hidden() {
 	if [ ${__z:=0} -eq 0 -a ${#POSTS_HIDDEN[@]} -ne 0 ]; then
-		echo -e "\n * Rendering Hidden Posts..." >&2
+		echo -e "\n * Hidden Posts : Rendering..." >&2
 		local POST_PREV='index.html'; local POST_NEXT='index.html';
 		(
 		for _lid in ${!POSTS_HIDDEN[@]}; do
@@ -710,7 +710,7 @@ _post_blash_hidden() {
 		done
 		) | column -t
 	else
-		echo -e "\n * Either no Hidden Posts (or not allowed to work on)..." >&2
+		echo -e "\n * Hidden Posts : No post or or not allowed to work on..." >&2
 	fi
 }
 
@@ -771,7 +771,7 @@ post_bake() {
 	# Rendering Hidden Posts
 	_post_blash_hidden
 
-	echo -e "\n * Rendering Posts..." >&2
+	echo -e "\n * Regular Posts : Rendering..." >&2
 	idx=0
 	id_all=0
 	_allTags=''
@@ -836,13 +836,13 @@ post_bake() {
 	fi
 
 	if [ ${__x:=0} -eq 0 ]; then
-		echo "Rendering RSS" >&2
+		echo -e "\n * RSS feed : Rendering..." >&2
 		RSS_DATE="$(date -R)"
 		render_file "$LAYOUT_DIR/rss.md" > "$OUTPUT_DIR/rss.xml" &
 		wait
 	fi
 	if [ ${__X:=0} -eq 0 ]; then
-		echo "Rendering Atom" >&2
+		echo -e "\n * Atom feed : Rendering..." >&2
 		export ATOM_TAG="${ATOM_TAG},${ATOM_DATE%%-*}"
 		render_file "$LAYOUT_DIR/atom.md" > "$OUTPUT_DIR/atom.xml" &
 		wait
@@ -850,13 +850,13 @@ post_bake() {
 	# Generating the index.html
 #(for iii in $(compgen  -v | grep -E "^posts_[0-9]" | sort -n -k2 -t_); do echo "${iii}=${!iii}"; done)
 	export GENERATE_INDEX=true
-	echo "Rendering Index..." >&2
+	echo -e "\n * Index : Rendering..." >&2
 	render_file "$LAYOUT_DIR/index.md" > "$OUTPUT_DIR/index.html" &
 	wait
 	# Generate the indexes for each tags
 	unset GENERATE_INDEX
 	if [ ${__t:=0} -eq 0 ]; then
-		echo "Rendering Index for categories..." >&2
+		echo -e "\n * Categories : Rendering..." >&2
 		export GENERATE_TAGS=true
 		while read _tagIdx; do
 			# It's really important to unset all posts variables
@@ -881,7 +881,7 @@ post_bake() {
 			wait
 		done <<< "$(echo -e "${_allTags//,/\\n}")"
 	fi
-	echo 'Blashed !' >&2
+	echo -e '\nBlashed !' >&2
 }
 
 # die print message to stderr and exit
