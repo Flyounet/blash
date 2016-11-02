@@ -757,7 +757,7 @@ _post_blash_is_new_section() {
 
 # post_bake it's where the magic start
 post_bake() {
-	echo -e "\n * Preparing work..." >&2
+	echo -e "\n * Loading Posts headers..." >&2
 	# Getting Markdown binaries
 	_post_blash_markdown
 	# Preparing Direcotries
