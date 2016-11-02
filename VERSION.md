@@ -1,3 +1,8 @@
+## 1.2.3 - 2016/11/02 (Flyounet)
+
+ + Blash now support the `nomarkdown` header in post. It allows you to not transform a post.
+ * README update
+ * Code update. Draft and Hidden posts are now generated before Regular posts.
 
 ## 1.2.2 - 2016/10/18 (Flyounet)
 
