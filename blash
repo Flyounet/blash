@@ -758,20 +758,25 @@ echo "-------------------------------------------------------------" >&2
 	 	declare -g "posts_${_curr}_NEWSECTION"=true
 		declare -g "posts_${_curr}_NEWDATE"=true
 		declare -g "posts_${_curr}_newdate"="$(date --date="${POSTS_HEADERS[post_${1}_date-notz]}" "${BLASH_TIMELINE_RENDERER}")"
+echo "posts_${_curr}_NEWSECTION=true" >&2
 set +xv
 	}
 	unset NEWENDSECTION;
 #	declare -g "posts_${1}_NEWENDSECTION"=''
 	declare -g "posts_${_curr}_NEWENDSECTION"=''
-	[[ ${1} -eq ${#POSTS_PUBLISHED[@]} || ${_next} -gt ${#POSTS_PUBLISHED[@]} || \
+set -xv
+#	[[ ${1} -eq ${#POSTS_PUBLISHED[@]} || ${_next} -gt ${#POSTS_PUBLISHED[@]} || \
+	[[ ${POSTS_HEADERS[post_${1}__logicalid]} -eq ${#POSTS_PUBLISHED[@]} || ${_next} -gt ${#POSTS_PUBLISHED[@]} || \
 		"$(date --date="${POSTS_HEADERS[post_${1}_date-notz]}" "${BLASH_TIMELINE_COMPARATOR}")" != \
 		"$(date --date="${POSTS_HEADERS[post_${POSTS_PUBLISHED[${_next}]}_date-notz]}" "${BLASH_TIMELINE_COMPARATOR}")" \
 	]] && {
 #set -xv
 #	 	declare -g "posts_${1}_NEWENDSECTION"=true
+echo "posts_${_curr}_NEWENDSECTION=true" >&2
 	 	declare -g "posts_${_curr}_NEWENDSECTION"=true
 set +xv
 	}
+set +xv
 
 }
 
