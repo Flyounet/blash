@@ -1,3 +1,9 @@
+## 1.2.4 - 2016/11/?? (Flyounet)
+
+ ? List of tag on index page
+ ? Code cleaning
+ ? Doc update
+
 ## 1.2.3 - 2016/11/02 (Flyounet)
 
  + Blash now support the `nomarkdown` header in post. It allows you to not transform a post.
