@@ -197,8 +197,8 @@ get_posts_headers() {
 		local _xTag=0
 		while read _tag; do
 			[[ -z "${_tag}" ]] && continue
-			declare -g "tags_${_xTag}_link"="index_$(slug <<< "${_tag}").html"
-			declare -g "tags_${_xTag}_name"="${_tag}"
+			echo "declare -g 'tags_${_xTag}_link'='index_$(slug <<< "${_tag}").html'"
+			echo "declare -g 'tags_${_xTag}_name'='${_tag}'"
 			(( _xTag++ ))
 		done <<< "$(echo -e "${_allRegularTags//,/\\n}" | sort -u)"
 	fi
@@ -862,6 +862,7 @@ post_bake() {
 	fi
 	# Generating the index.html
 #(for iii in $(compgen  -v | grep -E "^posts_[0-9]" | sort -n -k2 -t_); do echo "${iii}=${!iii}"; done)
+#(for iii in $(compgen  -v | grep -E "^tags_[0-9]" | sort -n -k2 -t_); do echo "${iii}=${!iii}"; done) >&2
 	export GENERATE_INDEX=true
 	echo -e "\n * Index : Rendering..." >&2
 	render_file "$LAYOUT_DIR/index.md" > "$OUTPUT_DIR/index.html" &
