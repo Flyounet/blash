@@ -115,7 +115,7 @@ Directives are :
 - `@include file` : Include part (only content) of a template file. You don't need to add the `.md`, it's added automatically. See example above.
 - `@if variable ... @end` : If the variable exists then the content of `@if ... @end` is added to the template. See example above.
 - `@if !variable ... @end` : If the variable doesn't exist (or is empty) then the content of `@if ... @end` is added to the template. Space is **not** allowed between `!` and the _variable_.
-- `@each variable ... @end` : _variable_ MUST be an array. Iterate on the content of the array. See example below.
+- `@each variable ... @end` : _variable_ MUST be an array. Iterate on the content of the array. See example below. The first array key MUST be numbered from _`0`_.
 - `@cmd ... @end` : Execute the shell code, and embbed the `stdout`. Be aware that this could have impact on your workstation/server. See example below.
 
 #### Templates : Directives examples
@@ -182,6 +182,7 @@ The headers in post indicate how Blash has to gerenerate your HTML :
 * `draft: `: When generating your post, Blash put your post in the `draft` directory if set to true, in `out` directory either.
 * `hidden: `: When generating your post, Blash put your post in the `hidden` directory if set to true, without any reference.
 * `summary: `: The summary is printed in the index (and could be added in the post).
+* `nomarkdown:` : When set to `true`, the post content is not considered as _Markdown_. So, content stay as is.
 * `sumprint: `: If set to true, the summary will be added in the beginning of the post (depends on your layout).
 
 ### Blash configuration
