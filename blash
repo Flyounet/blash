@@ -175,6 +175,7 @@ get_posts_headers() {
 	declare -a POSTS_HIDDEN=()
 	declare -a POSTS_PUBLISHED=()
 	local _x=1
+	local _allRegularTags=''
 	for _lid in ${!posts[@]}; do
 		declare -A POST_HEADERS=(); unset POST_HEADERS
 		eval "$(get_headers "${posts[${_lid}]}" < "${posts[${_lid}]}")"
@@ -189,8 +190,18 @@ get_posts_headers() {
 		}
 		POSTS_PUBLISHED[${_x}]="${_lid}"
 		POSTS_HEADERS[post_${_lid}__logicalid]=${_x}
+		[[ ! -z "${POSTS_HEADERS[post_${_lid}_tags]}" ]] && _allRegularTags="${_allRegularTags}${POSTS_HEADERS[post_${_lid}_tags]},"
 		((_x++));
 	done
+	if [ ! -z "${_allRegularTags}" ]; then
+		local _xTag=0
+		while read _tag; do
+			[[ -z "${_tag}" ]] && continue
+			declare -g "tags_${_xTag}_link"="index_$(slug <<< "${_tag}").html"
+			declare -g "tags_${_xTag}_name"="${_tag}"
+			(( _xTag++ ))
+		done <<< "$(echo -e "${_allRegularTags//,/\\n}" | sort -u)"
+	fi
 	echo "$(declare -p POSTS_DRAFT);"
 	echo "$(declare -p POSTS_HIDDEN);"; # POSTS_HIDDEN only contains Hidden & !Draft
 	echo "$(declare -p POSTS_HEADERS);"
@@ -809,6 +820,8 @@ post_bake() {
 
 		# Render the post
 		render_file "${post}" > "${OUTPUT_DIR}/${POSTS_HEADERS[post_${_lid}__post_filename_noext]}.html" &
+
+		# Prepapre datas for Indexes
 		local _id4each; (( _id4each=${POSTS_HEADERS[post_${_lid}__logicalid]} - 1 ))
 		declare "posts_${_id4each}_id"="${POSTS_HEADERS[post_${_lid}__post_filename_noext]}"
 		if [ ${__x:=0} -eq 0 ]; then # RSS datetime has to be RFC 822 compliant
@@ -853,6 +866,7 @@ post_bake() {
 	echo -e "\n * Index : Rendering..." >&2
 	render_file "$LAYOUT_DIR/index.md" > "$OUTPUT_DIR/index.html" &
 	wait
+
 	# Generate the indexes for each tags
 	unset GENERATE_INDEX
 	if [ ${__t:=0} -eq 0 ]; then
