@@ -197,10 +197,10 @@ get_posts_headers() {
 		local _xTag=0
 		while read _tag; do
 			[[ -z "${_tag}" ]] && continue
-			echo "declare -g 'tags_${_xTag}_link'='index_$(slug <<< "${_tag}").html'"
-			echo "declare -g 'tags_${_xTag}_name'='${_tag}'"
+			echo "declare -g 'tags_for_index_${_xTag}_link'='index_$(slug <<< "${_tag}").html'"
+			echo "declare -g 'tags_for_index_${_xTag}_name'='${_tag}'"
 			(( _xTag++ ))
-		done <<< "$(echo -e "${_allRegularTags//,/\\n}" | sort -u)"
+		done <<< "$(echo -e "${_allRegularTags//,/\\n}" | sort -fu)"
 	fi
 	echo "$(declare -p POSTS_DRAFT);"
 	echo "$(declare -p POSTS_HIDDEN);"; # POSTS_HIDDEN only contains Hidden & !Draft
@@ -802,13 +802,19 @@ post_bake() {
 
 		# look for the tags
 		if [ ${__t:=0} -eq 0 ]; then # When implemented the -c will avoid tags generation
-			local _tag=''; TAGSLIST=''
+			local _tag=''; TAGSLIST=''; local _nTag=${_nTag:=0}
 			if [ ! -z "${POSTS_HEADERS[post_${_lid}_tags]}" ]; then
+				# Unset all previous tags
+				while [ ${_nTag} -ne 0 ]; do ((_nTag--)); unset "tags_for_post_${_nTag}_link"; unset "tags_for_post_${_nTag}_name";done
 				while read _tag; do
+					[[ -z "${_tag}" ]] && continue
 					TAGSLIST="${TAGSLIST}${TAGS_LINK//==tagNameSlugged==/$(slug <<< "${_tag}")}"
 					TAGSLIST="${TAGSLIST//==tagName==/${_tag}}"
 					_allTags="${_allTags//${_tag},/}${_tag},"
-				done <<< "$(echo -e "${POSTS_HEADERS[post_${_lid}_tags]//,/\\n}")"
+					declare -g "tags_for_post_${_nTag}_link"="index_$(slug <<< "${_tag}").html"
+					declare -g "tags_for_post_${_nTag}_name"="${_tag}"
+					(( _nTag++ ))
+				done <<< "$(echo -e "${POSTS_HEADERS[post_${_lid}_tags]//,/\\n}" | sort -fu)"
 			fi
 		else
 			unset TAGSLIST
