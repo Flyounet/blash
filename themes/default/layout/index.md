@@ -13,7 +13,7 @@
 	{{ SITE_DESC }}
 	</header>
 <ul>
-@each tags
+@each tags_for_index
 	<li><a href="{{ link }}">{{ name }}</a></li>
 @end
 </ul>
