@@ -1,8 +1,17 @@
-## 1.2.4 - 2016/11/?? (Flyounet)
+## 1.4.x - 2016/12/?? (Flyounet)
 
- ? List of tag on index page
- ? Code cleaning
- ? Doc update
+ * Default Template variables change. Name uniformisation.
+ - TAGLIST to remove
+
+## 1.3.x - 2016/11/?? (Flyounet)
+
+ + URLs list
+
+## 1.2.4 - 2016/11/14 (Flyounet)
+
+ + List of tags on index page
+ + List of tags on article page
+ * Documentation update
 
 ## 1.2.3 - 2016/11/02 (Flyounet)
 
