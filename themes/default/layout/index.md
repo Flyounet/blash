@@ -12,6 +12,11 @@
 	<h1>{{ SITE_NAME }}</h1>
 	{{ SITE_DESC }}
 	</header>
+<ul>
+@each tags_for_index
+	<li><a href="{{ link }}">{{ name }}</a></li>
+@end
+</ul>
 
 	<section class="row">
 		<section class="col-md-6">
@@ -32,7 +37,6 @@
 			<img alt="logo-blash" src="image/blash.png" />
 		</section>
 	</section>
-
 	<footer class="text-center">
 		A <a href="http://github.com/flyounet/blash">blash</a> blog.
 @if RSS_DATE

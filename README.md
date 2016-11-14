@@ -170,6 +170,40 @@ Please note the `idx` variable is used internally by Blash.
 @end
 ```
 
+#### Templates : Default variables
+
+Currently, Blash is aware of 3 (three) types of pages :
+
+* The *main Index page*, formally known as `index.html`,
+* The *tags Indexes page*, formally known as `index_tags.html`,
+* The *article page*.
+  
+Here is a list of default variables sets by Blash :
+
+ * `SITE_NAME` : String with the *Site Name*. Available on page : `index`, `tags index`, `article`..
+ * `SITE_DESC` : String with the *Site Description*.. Available on page : `index`, `tags index`, `article`.
+ * `GENERATE_INDEX` : Bool set to true when the *main Index page* is generated (set to false for *tags Indexex page*). Available on page : `index`.
+ * `tags_for_index` : Array containing `name` and `link` to all tags. Available on page : `index`, `tags index`, `article`.
+ * `NEWDATE` : Bool set to true when a `NEWSECTION` starts. Available on page : `index`, `tags index`.
+ * `newdate` : String containing the new section date. Available on page : `index`, `tags index`.
+ * `NEWSECTION` : Bool set to true when a `NEWSECTION` starts. Available on page : `index`, `tags index`.
+ * `NEWENDSECTION` : Bool set to true when a `NEWENDSECTION` has been reached. Available on page : `index`, `tags index`.
+ * `id` : Link to article (without `.html`).
+ * `summary` : Article *summary*. Available on page : `index`, `tags index`, `article`.
+ * `tags_for_post` : Array containing `name` and `link` to tags related to an article. Available on page : `article`.
+ * `TAGS_LINK` : *Deprecated & replaced by `tags_for_post`. Will be removed soon.* String containing list of name/links to tags related to an article. Available on page : `article`.
+ * `SUMMARYPRINT` : Bool set to true when the summary has to be printed. Available on page : `article`.
+ * `SUMMARYPARSED` : String with *Summary* transformed. Available on page : `article`.
+ * `title` : This is the `title` of the *article*. Available on page : `article`.
+ * `content` : *Content* of the article. Available on page : `article`.
+ * `date` : Article Redaction date. Available on page : `index`, `tags index`, `article`.
+ * `update` : Available on page : `index`, `tags index`, `article`.
+ * `POST_NEXT` : Link the next (newer) post (or *main index* if none available). Available on page : `article`.
+ * `POST_PREV` : Link the previous (older) post (or *main index* if none available). Available on page : `article`.
+ * `RSS_DATE` : String exists when RRS feed is generated .Available on page : `index`, `tags index`, `article`.
+ * `ATOM_DATE` : String exists when Atom feed is generated. Available on page : `index`, `tags index`, `article`.
+
+
 ### Posts configuration
 
 The headers in post indicate how Blash has to gerenerate your HTML :
