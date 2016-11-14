@@ -1,3 +1,7 @@
+## 2.0.x - 2017/02/?? (Flyounet)
+
+ - Old legacy commands (post/bake/...) to remove.
+
 ## 1.4.x - 2016/12/?? (Flyounet)
 
  * Default Template variables change. Name uniformisation.
