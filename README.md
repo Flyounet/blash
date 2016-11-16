@@ -202,6 +202,9 @@ Here is a list of default variables sets by Blash :
  * `POST_PREV` : Link the previous (older) post (or *main index* if none available). Available on page : `article`.
  * `RSS_DATE` : String exists when RRS feed is generated .Available on page : `index`, `tags index`, `article`.
  * `ATOM_DATE` : String exists when Atom feed is generated. Available on page : `index`, `tags index`, `article`.
+ * `INDEX_GENERATION_DATE` : String containing the date of generation. Available on page : `index`, `tags index`.
+ * `ARTICLE_GENERATION_DATE` : String containing the date of generation. Available on page : `article`.
+    *N.B. *: This variable also exists in the array `posts` named as `generation_date`.
 
 
 ### Posts configuration
