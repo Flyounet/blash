@@ -824,6 +824,8 @@ post_bake() {
 		_post_blash_summary_print ${_lid}
 		_post_blash_print_status ${_lid}
 
+		# Variable for date of page generation
+		export ARTICLE_GENERATION_DATE="$(date -u "+%FT%TZ")"
 		# Render the post
 		render_file "${post}" > "${OUTPUT_DIR}/${POSTS_HEADERS[post_${_lid}__post_filename_noext]}.html" &
 
@@ -839,6 +841,7 @@ post_bake() {
 			declare -g "posts_${_id4each}_atomtag"="${ATOM_TAG},${_atomd%%-*}"
 		fi
 		export_headers "$post" "posts_${_id4each}_"
+		declare -g "posts_${_id4each}_generation_date"="${ARTICLE_GENERATION_DATE}"
 		local lesum="posts_${_id4each}_summary";
 		[[ ! -z "${!lesum}" ]] && {
 			declare -g "posts_${_id4each}_summary"="${POSTS_HEADERS[post_${_lid}_summary]}"
@@ -871,6 +874,8 @@ post_bake() {
 #(for iii in $(compgen  -v | grep -E "^tags_[0-9]" | sort -n -k2 -t_); do echo "${iii}=${!iii}"; done) >&2
 	export GENERATE_INDEX=true
 	echo -e "\n * Index : Rendering..." >&2
+	# Variable for date of Index generation
+	export INDEX_GENERATION_DATE="$(date -u "+%FT%TZ")"
 	render_file "$LAYOUT_DIR/index.md" > "$OUTPUT_DIR/index.html" &
 	wait
 
@@ -898,6 +903,8 @@ post_bake() {
 					done <<< "$(echo -e "${POSTS_HEADERS[post_${_lid}_tags]//,/\\n}")"
 				fi
 			done
+			# Variable for date of Index generation
+			export INDEX_GENERATION_DATE="$(date -u "+%FT%TZ")"
 			render_file "$LAYOUT_DIR/${TAGS_LAYOUT}" > "$OUTPUT_DIR/index_$(slug <<< "${_tagIdx}").html" &
 			wait
 		done <<< "$(echo -e "${_allTags//,/\\n}")"
