@@ -9,7 +9,8 @@
 
 ## 1.3.x - 2016/11/?? (Flyounet)
 
- + URLs list
+ + Variable added to provide generation date of pages
+ ? URLs list
 
 ## 1.2.4 - 2016/11/14 (Flyounet)
 
