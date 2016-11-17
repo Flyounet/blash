@@ -182,11 +182,13 @@ get_posts_headers() {
 		for _sub_lid in ${!POST_HEADERS[@]}; do
 			POSTS_HEADERS[post_${_lid}_${_sub_lid}]="${POST_HEADERS[${_sub_lid}]}"
 		done
+		# Post is Draft
 		[[ ! -z "${POSTS_HEADERS[post_${_lid}_draft]}" && "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'false' ]] && { POSTS_DRAFT[${_lid}]=${_lid}; continue; }
+		# Post is Hidden
 		[[ ! -z "${POSTS_HEADERS[post_${_lid}_hidden]}" && "${POSTS_HEADERS[post_${_lid}_hidden],,}" != 'false' ]] && {
-			[[ ! -z "${POSTS_HEADERS[post_${_lid}_draft]}" && "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'false' ]] || \
-				POSTS_HIDDEN[${_lid}]=${_lid}
-				continue;
+			# Post is Hidden & not Draft
+			[[ ! -z "${POSTS_HEADERS[post_${_lid}_draft]}" && "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'false' ]] || POSTS_HIDDEN[${_lid}]=${_lid};
+			continue;
 		}
 		POSTS_PUBLISHED[${_x}]="${_lid}"
 		POSTS_HEADERS[post_${_lid}__logicalid]=${_x}
