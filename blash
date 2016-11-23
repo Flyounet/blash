@@ -63,18 +63,24 @@ config() {
 
 	# OUTPUT_DIR stores all compiled html
 	export OUTPUT_DIR="${OUTPUT_DIR:=${__w}out}"
-
-	# DRAFT_DIR stores all compiled html
+	# DRAFT_DIR stores all draft compiled html
 	export DRAFT_DIR="${DRAFT_DIR:=${__w}draft}"
+	# HIDDEN_DIR stores all hidden compiled html
+	export HIDDEN_DIR="${HIDDEN_DIR:=${OUTPUT_DIR}}"
+
+	# BLASH_THEME_DIR where to find the theme
+	export BLASH_THEME_DIR="${BLASH_THEME_DIR:=${__w}themes/default}"
+	# BLASH_THEME_LAYOUT_DIR : For a particular where to find the layout files ".md"
+	export BLASH_THEME_LAYOUT_DIR="${BLASH_THEME_LAYOUT_DIR:=${BLASH_THEME_DIR}/layout}"
+	# BLASH_THEME_PUBLIC_DIR : For a particular where to find the public files (image, css, ...)
+	export BLASH_THEME_PUBLIC_DIR="${BLASH_THEME_PUBLIC_DIR:=${BLASH_THEME_DIR}/public}"
 
 	# LAYOUT_DIR stores all layout markdown files
-	export LAYOUT_DIR="${LAYOUT_DIR:=${__w}themes/default/layout}"
+#	export LAYOUT_DIR="${LAYOUT_DIR:=${__w}themes/default/layout}"
+	export LAYOUT_DIR="${BLASH_THEME_LAYOUT_DIR}"
 
 	# PUBLIC_DIR stores css and static images
-	export PUBLIC_DIR="${PUBLIC_DIR:=${__w}themes/default/public}"
-
-	# HIDDEN_DIR stores css and static images
-	export HIDDEN_DIR="${HIDDEN_DIR:=${OUTPUT_DIR}}"
+	export PUBLIC_DIR="${PUBLIC_DIR:=${__w}public}"
 
 	# site
 	export SITE_NAME="${SITE_NAME:=a blash blog}"
@@ -652,16 +658,29 @@ _post_blash_markdown() {
 
 # _post_blash_prepare_dirs : Create/update/delete working dirs
 _post_blash_prepare_dirs() {
-	[[ "${DRAFT_DIR}" = '/' && "${OUTPUT_DIR}" = '/' ]] && die "DRAFT_DIR and/or OUTPUT_DIR are equal to /. Can't remove them. Aborting."
+	[[ "$( cd -P "${DRAFT_DIR}" )" = '/' || "$( cd -P "${OUTPUT_DIR}" )" = '/' ]] && die "DRAFT_DIR and/or OUTPUT_DIR are equal to /. Can't remove them. Aborting."
 	# Cleaning DRAFT_DIR & OUTPUT_DIR
-	rm -rf "${DRAFT_DIR}" "${OUTPUT_DIR}"; mkdir -p "${DRAFT_DIR}" "${OUTPUT_DIR}"
-
+	rm -rf -- "${DRAFT_DIR}" "${OUTPUT_DIR}"; mkdir -p -- "${DRAFT_DIR}" "${OUTPUT_DIR}"
+	[[ "${OUTPUT_DIR}" != "${HIDDEN_DIR}" ]] && { [[ "$( cd -P "${HIDDEN_DIR}" )" = '/' ]] || rm -rf -- "${HIDDEN_DIR}"; mkdir -p -- "${HIDDEN_DIR}"; }
+	[[ ! -d "${BLASH_THEME_DIR}" ]] && die "BLASH_THEME_DIR \`${BLASH_THEME_DIR}\` not found. Aborting."
+	[[ ! -d "${BLASH_THEME_PUBLIC_DIR}" ]] && die "BLASH_THEME_PUBLIC_DIR \`${BLASH_THEME_PUBLIC_DIR}\` not found. Aborting."
+	[[ ! -d "${BLASH_THEME_LAYOUT_DIR}" ]] && die "BLASH_THEME_LAYOUT_DIR \`${BLASH_THEME_LAYOUT_DIR}\` not found. Aborting."
 	[[ ! -d "${PUBLIC_DIR}" ]] && die "PUBLIC_DIR \`${PUBLIC_DIR}\` not found. Aborting."
+	[[ "${OUTPUT_DIR}" != "${HIDDEN_DIR}" && ! -d "${HIDDEN_DIR}" ]] && die "HIDDEN_DIR \`${HIDDEN_DIR}\` not found. Aborting."
+	# Next line to be reove soon
 	[[ ! -d "${LAYOUT_DIR}" ]] && die "LAYOUT_DIR \`${LAYOUT_DIR}\` not found. Aborting."
-	[[ -d "${POST_DIR}" ]] || usage
-	[[ -d "${PUBLIC_DIR}" ]] && cp -r "${PUBLIC_DIR}"/. "${OUTPUT_DIR}"
-	[[ -d "${PUBLIC_DIR}" ]] && cp -r "${PUBLIC_DIR}"/. "${DRAFT_DIR}"
+	[[ -d "${POST_DIR}" ]] || { echo "Creating '${POST_DIR}' ..." >&2; mkdir -p -- "${POST_DIR}" || die "Can't create '${POST_DIR}'. Aborting."; }
+#	[[ -d "${POST_DIR}" ]] || usage
+	cp -r -- "${BLASH_THEME_PUBLIC_DIR}/." "${OUTPUT_DIR}"
+	cp -r -- "${BLASH_THEME_PUBLIC_DIR}/." "${DRAFT_DIR}"
+	cp -r -- "${PUBLIC_DIR}"/. "${OUTPUT_DIR}"
+	cp -r -- "${PUBLIC_DIR}"/. "${DRAFT_DIR}"
+
+#	[[ -d "${PUBLIC_DIR}" ]] && cp -r "${PUBLIC_DIR}"/. "${OUTPUT_DIR}"
+#	[[ -d "${PUBLIC_DIR}" ]] && cp -r "${PUBLIC_DIR}"/. "${DRAFT_DIR}"
+#	[[ -d "${PUBLIC_DIR}" ]] && cp -r "${PUBLIC_DIR}"/. "${DRAFT_DIR}"
 	touch "${DRAFT_DIR}/index.html"
+	[[ ! -f "${PUBLIC_DIR}/index.html" ]] && touch "${PUBLIC_DIR}/index.html"
 	# shouldn't I have to manage HIDDEN_DIR ?
 }
 

@@ -10,6 +10,7 @@
 ## 1.3.x - 2016/11/?? (Flyounet)
 
  + Variable added to provide generation date of pages
+ * An issue was present when test was done to generate Hidden Post. Corrected
  ? URLs list
 
 ## 1.2.4 - 2016/11/14 (Flyounet)

@@ -1,8 +1,8 @@
 ---
 title: Markdown : License
 date: 2016-11-17T08:30:17Z
-update: 
-tags: markdown
+update: 2016-11-17T17:53:01Z
+tags: markdown,license
 layout: post
 draft: false
 hidden: true
