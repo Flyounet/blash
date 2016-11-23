@@ -503,6 +503,8 @@ post_rename() {
 	_pTitle="$(header title < "${_fname}")"
 	_nDate="$(date -u "+%FT%TZ" --date "${_pDate//[ZT]/ }" 2>/dev/null)"
 	[[ ${?} -ne 0 ]] && die "Date invalide."
+	[[ "${_fname}" = "${POST_DIR}/$(date -u +%Y-%m-%d --date "${_nDate//[ZT]/ }")-$(slug <<< "${_pTitle}").md" ]] && \
+		die "Filename unchanged."
 	mv "${_fname}" "${POST_DIR}/$(date -u +%Y-%m-%d --date "${_nDate//[ZT]/ }")-$(slug <<< "${_pTitle}").md" && \
 		echo "${POST_DIR}/$(date -u +%Y-%m-%d --date "${_nDate//[ZT]/ }")-$(slug <<< "${_pTitle}").md"
 }
@@ -602,12 +604,14 @@ post_infos() {
 	Configuration file	: ${CONFIG_FILE}
 
 	Post directory		: ${POST_DIR}
-	Layout directory	: ${LAYOUT_DIR}
 	Public directory	: ${PUBLIC_DIR}
+	Theme layout directory	: ${BLASH_THEME_LAYOUT_DIR}
+	Theme public directory	: ${BLASH_THEME_PUBLIC_DIR}
 
 	Output directory	: ${OUTPUT_DIR}
 	Draft directory		: ${DRAFT_DIR}
 	Hidden directory	: ${HIDDEN_DIR}
+	Post to test directory	: ${BLASH_EXPORT_POST_TO_TEXT_OUTPUT_DIR}
 
 	Site name		: ${SITE_NAME}
 	Site Description	: ${SITE_DESC}
@@ -617,16 +621,22 @@ post_infos() {
 	Author description	: ${AUTHOR_DESC}
 	Author Email		: ${AUTHOR_EMAIL}
 	Author Email hash	: ${AUTHOR_EMAIL_HASH}
-	Author Github name	: ${AUTHOR_GITHUB}
-	Author Twitter name	: ${AUTHOR_TWITTER}
-
-	Disqus name		: ${DISQUS}
 
 	Tags default list	: ${TAGS_BASELIST}
 	Tags Link		: ${TAGS_LINK}
 	Tags Layout		: ${TAGS_LAYOUT}
 
 	Summary to print	: ${PRINT_ALL_SUMMARY}
+
+	Export post to text	: ${BLASH_EXPORT_POST_TO_TEXT}
+	Post to text extension	: ${BLASH_EXPORT_POST_TO_TEXT_EXT}
+	Export headers in text	: ${BLASH_EXPORT_POST_TO_TEXT_INCLUDE_HEADERS}
+
+	Don't update when edit	: ${BLASH_NO_AUTO_UPDATE_ON_EDIT}
+
+	Auto update on copy	: ${BLASH_ON_COPY_IMPLIES_UPDATE}
+	Auto rename on copy	: ${BLASH_ON_COPY_IMPLIES_RENAME}
+	Auto edit on copy	: ${BLASH_ON_COPY_IMPLIES_EDIT}
 
 	Extra Header(s)		: ${BLASH_EXTRA_HEADER}
 

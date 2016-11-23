@@ -6,12 +6,17 @@
 
  * Default Template variables change. Name uniformisation.
  - TAGLIST to remove
+ ? URLs list
 
 ## 1.3.x - 2016/11/?? (Flyounet)
 
+ + Added New Furry theme.
+ * Rework on old themes.
  + Variable added to provide generation date of pages
- * An issue was present when test was done to generate Hidden Post. Corrected
- ? URLs list
+ * An issue was present when test was done to generate Hidden Post. Corrected.
+ * Issue when trying to rename a post with same name. Corrected.
+ + Added variables to manage templates.
+ + Added missing Variables in the post_infos function.
 
 ## 1.2.4 - 2016/11/14 (Flyounet)
 

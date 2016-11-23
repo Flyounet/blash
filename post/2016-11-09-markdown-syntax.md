@@ -1,8 +1,8 @@
 ---
 title: Markdown : Syntax
 date: 2016-11-09T00:00:00Z
-update: 2016-11-23T08:22:00Z
-tags: blash,license
+update: 2016-11-23T21:37:58Z
+tags: markdown
 layout: post
 draft: false
 hidden: false
@@ -10,10 +10,6 @@ nomarkdown: false
 sumprint: true
 summary: Following are Blash Licenses
 ---
-
-The DSSLv1 & WTPFL licenses apply on this material.
-
-The GPLv2 applies on the Original Baker work.
 
 Markdown: Syntax
 ================
