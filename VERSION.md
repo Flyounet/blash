@@ -17,6 +17,7 @@
  * Issue when trying to rename a post with same name. Corrected.
  + Added variables to manage templates.
  + Added missing Variables in the post_infos function.
+ * Issue when generating prev/next post link. Next was Prev and Prev was Next. Corrected.
 
 ## 1.2.4 - 2016/11/14 (Flyounet)
 

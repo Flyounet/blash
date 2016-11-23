@@ -192,6 +192,8 @@
 .fa-terminal:before { content: '\f120'; } /* '' */
 .fa-html5:before { content: '\f13b'; } /* '' */
 .fa-css3:before { content: '\f13c'; } /* '' */
+.fa-long-arrow-left:before { content: '\f177'; } /* '' */
+.fa-long-arrow-right:before { content: '\f178'; } /* '' */
 .fa-at:before { content: '\f1fa'; } /* '' */
 .fa-heartbeat:before { content: '\f21e'; } /* '' */
 .fa-hand-spock-o:before { content: '\f259'; } /* '' */

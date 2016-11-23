@@ -18,6 +18,7 @@
                         <li><a href="{{ POST_NEXT }}" title="Newer"><i class="fa fa-long-arrow-right fa-2x"></i></a></li>
                         <li><a href="{{ POST_PREV }}" title="Older"><i class="fa fa-long-arrow-left fa-2x"></i></a></li>
 			<li><a href="index.html" title="Home"><i class="fa fa-home fa-2x"></i></a></li>
+		</ul>
 	</nav>
 
 	<div id="content">

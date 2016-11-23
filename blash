@@ -756,18 +756,18 @@ _post_blash_hidden() {
 	fi
 }
 
-# _post_blash_get_previous_post : Return the name of the previous post
-_post_blash_get_previous_post() {
-	local _prev; (( _prev=${POSTS_HEADERS[post_${1}__logicalid]}-1 ));
-	[[ ${1} -eq 0 || ${_prev} -eq 0 ]] && { echo -n 'index'; return 0; }
-	echo -n "${POSTS_HEADERS[post_${POSTS_PUBLISHED[${_prev}]}__post_filename_noext]}"
+# _post_blash_get_next_post : Return the name of the next post
+_post_blash_get_next_post() {
+	local _next; (( _next=${POSTS_HEADERS[post_${1}__logicalid]}-1 ));
+	[[ ${1} -eq 0 || ${_next} -eq 0 ]] && { echo -n 'index'; return 0; }
+	echo -n "${POSTS_HEADERS[post_${POSTS_PUBLISHED[${_next}]}__post_filename_noext]}"
 }
 
-# _post_blash_get_inext_post : Return the name of the next post
-_post_blash_get_next_post() {
-	local _next; (( _next=${POSTS_HEADERS[post_${1}__logicalid]}+1 ));
-	[[ ${1} -eq ${#POSTS_PUBLISHED[@]} || ${_next} -gt ${#POSTS_PUBLISHED[@]} ]] && { echo -n 'index'; return 0; }
-	echo -n "${POSTS_HEADERS[post_${POSTS_PUBLISHED[${_next}]}__post_filename_noext]}"
+# _post_blash_get_previous_post : Return the name of the previous post
+_post_blash_get_previous_post() {
+	local _prev; (( _prev=${POSTS_HEADERS[post_${1}__logicalid]}+1 ));
+	[[ ${1} -eq ${#POSTS_PUBLISHED[@]} || ${_prev} -gt ${#POSTS_PUBLISHED[@]} ]] && { echo -n 'index'; return 0; }
+	echo -n "${POSTS_HEADERS[post_${POSTS_PUBLISHED[${_prev}]}__post_filename_noext]}"
 }
 
 # _post_blash_is_new_section : Define object for a new section

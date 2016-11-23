@@ -95,6 +95,18 @@
       "css": "html5",
       "code": 61755,
       "src": "fontawesome"
+    },
+    {
+      "uid": "f6d72aa5ef8e8f0e553012af9a29a87e",
+      "css": "long-arrow-left",
+      "code": 61815,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "fb94e23ae1e7660aa63cc5f351ec7560",
+      "css": "long-arrow-right",
+      "code": 61816,
+      "src": "fontawesome"
     }
   ]
 }
