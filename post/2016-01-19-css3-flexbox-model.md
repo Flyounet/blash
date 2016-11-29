@@ -13,7 +13,7 @@ summary: Thisis a small description of what is Flexbox.
 
 
 CSS3 Flexbox
-============
+------------
 
 > Flexible boxes, or flexbox, is a new layout mode in CSS3.
 > 
@@ -27,7 +27,7 @@ You could find more information on the [W3Schools][w3s], and on the [bible][w3c]
 [w3s]: http://www.w3schools.com/css/css3_flexbox.asp "A great documentation with example"
 
 Learn CSS3 Flexbox
-==================
+------------------
 
 Some games exist to teach you how simple is Flexbox :
 

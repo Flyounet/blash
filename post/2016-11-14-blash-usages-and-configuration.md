@@ -11,12 +11,14 @@ sumprint: true
 summary: Blash is a CLI tool. It's relatively simple to use it.
 ---
 
-# What's a CLI tool ?
+What's a CLI tool ?
+===================
 
 If you're here, you should already know. But, we could say a CLI tool is something that is not using any graphical interface.    
 To be more precise `CLI` means *Command Line Interface*.
 
-## Usages
+Usages <a id="usages"></a>
+------
 
 Here are some commands available (execute `blash -h` to have all commands) :
 
@@ -29,9 +31,10 @@ Here are some commands available (execute `blash -h` to have all commands) :
 
 As this site is also built using `blash`, and sources provided, you could easily test it, or follow some [examples][bex].
 
-## Enhance your site
+Enhance your site <a id="enhance"></a>
+-----------------
 
-### Templates
+<h3 id="templates">Templates</h3>
 
 Templates or Layout is a system where you build your pages, include other pages, make statements, and Blash takes it all and build your site.
 
@@ -187,7 +190,7 @@ Here is a list of default variables sets by Blash :
     *N.B. *: This variable also exists in the array `posts` named as `generation_date`.
 
 
-### Posts configuration
+<h3 id="configpost">Posts configuration</h3>
 
 The headers in post indicate how Blash has to gerenerate your HTML :
 
@@ -202,7 +205,7 @@ The headers in post indicate how Blash has to gerenerate your HTML :
 * `nomarkdown:` : When set to `true`, the post content is not considered as _Markdown_. So, content stay as is.
 * `sumprint: `: If set to true, the summary will be added in the beginning of the post (depends on your layout).
 
-### Blash configuration
+<h3 id="configlash">Blash configuration</h3>
 
 Blash is able to load a config file either by itself (if your config file is named `blash.conf`) or by using the `-f filename`.  
 Here are some variables you could change (in fact all could be changed, it will depend on your needs) :
@@ -247,7 +250,7 @@ Here are some variables you could change (in fact all could be changed, it will 
 * `BLASH_ON_COPY_IMPLIES_RENAME` : If you duplicate/copy a post blash will automatically rename the post, unless set to `false`.
 
 
-### Draft & Hidden posts:
+<h3 id="draft">Draft & Hidden posts:</h3>
 
 * Draft posts : You don't have always time to terminate what you write. So, the default value of the header `draft: ` in each post is set to `true`. This means that when you convert all your posts, those kind of posts are generated in the `DRAFT_DIR`. It's only to avoid your unfinished publication to be readable by everyone. Drafted posts or not included in the indexes.
 * Hidden posts : You sometimes want to publish something that is relatively secret, the `hidden: ` header is here for that. The hidden posts are generated in the `OUTPUT_DIR` (by default, and could be override) and not indexed. If you need something more secure, you should select a dedicated directory with at least a per user/password access.

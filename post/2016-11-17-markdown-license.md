@@ -11,6 +11,8 @@ sumprint: false
 summary: 
 ---
 
+> This is a copy *updated* of the Markdown [License](http://daringfireball.net/projects/markdown/license "Markdown License") page from John Gruber site.
+
 Markdown is free software, available under the terms of a BSD-style
 open source license.
 

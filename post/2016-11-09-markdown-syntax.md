@@ -11,16 +11,10 @@ sumprint: true
 summary: Following are Blash Licenses
 ---
 
+> This is a copy *updated* of the Markdown [Syntax](http://daringfireball.net/projects/markdown/syntax "Markdown Basics") page from John Gruber site.
+
 Markdown: Syntax
 ================
-
-<ul id="ProjectSubmenu">
-    <li><a href="/projects/markdown/" title="Markdown Project Page">Main</a></li>
-    <li><a href="/projects/markdown/basics" title="Markdown Basics">Basics</a></li>
-    <li><a class="selected" title="Markdown Syntax Documentation">Syntax</a></li>
-    <li><a href="/projects/markdown/license" title="Pricing and License Information">License</a></li>
-    <li><a href="/projects/markdown/dingus" title="Online Markdown Web Form">Dingus</a></li>
-</ul>
 
 
 *   [Overview](#overview)
@@ -47,7 +41,7 @@ Markdown: Syntax
 **Note:** This document is itself written using Markdown; you
 can [see the source for it by adding '.text' to the URL][src].
 
-  [src]: /projects/markdown/syntax.text
+  [src]: 2016-11-09-markdown-syntax.text
 
 * * *
 

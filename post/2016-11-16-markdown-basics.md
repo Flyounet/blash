@@ -11,16 +11,10 @@ sumprint:
 summary: 
 ---
 
+> This is a copy *updated* of the Markdown [Basics](http://daringfireball.net/projects/markdown/basics "Markdown Basics") page from John Gruber site.
+
 Markdown: Basics
 ================
-
-<ul id="ProjectSubmenu">
-    <li><a href="/projects/markdown/" title="Markdown Project Page">Main</a></li>
-    <li><a class="selected" title="Markdown Basics">Basics</a></li>
-    <li><a href="/projects/markdown/syntax" title="Markdown Syntax Documentation">Syntax</a></li>
-    <li><a href="/projects/markdown/license" title="Pricing and License Information">License</a></li>
-    <li><a href="/projects/markdown/dingus" title="Online Markdown Web Form">Dingus</a></li>
-</ul>
 
 
 Getting the Gist of Markdown's Formatting Syntax
@@ -40,9 +34,9 @@ and translate it to XHTML.
 **Note:** This document is itself written using Markdown; you
 can [see the source for it by adding '.text' to the URL] [src].
 
-  [s]: /projects/markdown/syntax  "Markdown Syntax"
-  [d]: /projects/markdown/dingus  "Markdown Dingus"
-  [src]: /projects/markdown/basics.text
+  [s]: 2016-11-09-markdown-syntax.html  "Markdown Syntax"
+  [d]: http://daringfireball.net/projects/markdown/dingus  "Markdown Dingus"
+  [src]: 2016-11-16-markdown-basics.text
 
 
 ## Paragraphs, Headers, Blockquotes ##
