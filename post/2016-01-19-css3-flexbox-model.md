@@ -7,6 +7,7 @@ layout: post
 draft: false
 hidden: false
 nomarkdown: false
+indexTimeline: 
 sumprint: 
 summary: This is a small description of what is Flexbox.
 ---
@@ -23,7 +24,6 @@ CSS3 Flexbox
 
 You could find more information on the [W3Schools][w3s], and on the [bible][w3c] site.
 
-(<a id="1"></a>**[1](#rev1)**) : *New* is not so true, first draft has been published in 2009. It works (partially) since Firefox 22 and Chrome 29 in 2013...
 
  [w3c]: https://www.w3.org/TR/css-flexbox-1/
  [w3s]: http://www.w3schools.com/css/css3_flexbox.asp "A great documentation with example"
@@ -39,4 +39,8 @@ Some games exist to teach you how simple is Flexbox :
 
  [fbd]: http://www.flexboxdefense.com/
  [fbf]: http://flexboxfroggy.com/
+
+* * *
+
+(<a id="1"></a>**[1](#rev1)**) : *New* is not so true, first draft has been published in 2009. It works (partially) since Firefox 22 and Chrome 29 in 2013...
 
