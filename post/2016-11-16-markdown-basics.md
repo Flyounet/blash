@@ -2,16 +2,16 @@
 title: Markdown : Basics
 date: 2016-11-16T08:12:13Z
 update: 2016-11-23T07:53:33Z
-tags: markdown,blash
+tags: markdown
 layout: post
-draft: true
+draft: false
 hidden: false
 nomarkdown: false
 sumprint: 
 summary: 
 ---
 
-> This is a copy *updated* of the Markdown [Basics](http://daringfireball.net/projects/markdown/basics "Markdown Basics") page from John Gruber site.
+> This is an *updated* copy of the Markdown [Basics](http://daringfireball.net/projects/markdown/basics "Markdown Basics") page from John Gruber site.
 
 Markdown: Basics
 ================

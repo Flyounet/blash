@@ -11,7 +11,7 @@ sumprint: true
 summary: Following are Blash Licenses
 ---
 
-> This is a copy *updated* of the Markdown [Syntax](http://daringfireball.net/projects/markdown/syntax "Markdown Basics") page from John Gruber site.
+> This is a *updated* copy of the Markdown [Syntax](http://daringfireball.net/projects/markdown/syntax "Markdown Basics") page from John Gruber site.
 
 Markdown: Syntax
 ================

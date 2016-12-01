@@ -1,6 +1,7 @@
 ## 2.0.x - 2017/02/?? (Flyounet)
 
  - Old legacy commands (post/bake/...) to remove.
+ - When generating a site, generate only a given id (or only modified ones)
 
 ## 1.4.x - 2016/12/?? (Flyounet)
 
