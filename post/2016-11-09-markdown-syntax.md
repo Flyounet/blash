@@ -8,7 +8,7 @@ draft: false
 hidden: false
 nomarkdown: false
 sumprint: true
-summary: Following are Blash Licenses
+summary: Here is proposed a presentation of Markdown syntax.
 ---
 
 > This is a *updated* copy of the Markdown [Syntax](http://daringfireball.net/projects/markdown/syntax "Markdown Basics") page from John Gruber site.
