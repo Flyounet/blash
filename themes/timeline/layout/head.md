@@ -2,7 +2,7 @@
 ---
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" href="favicon.png">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
 <meta name="description" content="{{ SITE_DESC }}">
 <meta name="author" content="{{ AUTHOR_NAME }}">
 @if !GENERATEINDEX
