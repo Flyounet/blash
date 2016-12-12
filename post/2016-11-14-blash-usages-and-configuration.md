@@ -34,6 +34,17 @@ As this site is also built using `blash`, and sources provided, you could easily
 Enhance your site <a id="enhance"></a>
 -----------------
 
+<h3 id="themes">Themes</h3>
+
+`Blash` is provided with a set of basic themes. Themes are a collection of files, usually, a *configuration* file, [layout](#templates) one, and public files (css, images, ...).
+
+In the sub-directory `themes` you'll be able to find some. To try them, use :
+
+ * Furry theme : `./blash -f config-examples/theme_furry.conf ...` (*replace `...` by appropriate args*)
+ * Timeline theme : `./blash -f config-examples/theme_timeline.conf ...` (*replace `...` by appropriate args*)
+ * Legacy (reworked) theme : `./blash -f config-examples/theme_black.conf ...` (*replace `...` by appropriate args*)
+ * Legacy (old) theme : `./blash -f config-examples/theme_legacy-old.conf ...` (*replace `...` by appropriate args*)
+
 <h3 id="templates">Templates</h3>
 
 Templates or Layout is a system where you build your pages, include other pages, make statements, and Blash takes it all and build your site.
