@@ -340,4 +340,7 @@ text-decoration-color: #101010;
 .timeline.corange:before, .timeline h2.corange, .timeline article.corange, .timeline article.corange:nth-child(even) { background: #FF8000 !important; }
 .timeline article.corange:before, .timeline article.corange:nth-child(odd):before { border-top: 1em solid #FF8000 !important; }
 
-
+/* table */
+table { border: 2px solid #101010; }
+tr, td, th { border: 1px solid #101010; }
+th { background-color: #377AB7 !important; }
