@@ -31,7 +31,7 @@
 # \*------------------------------------------------------------------------*/
 
 
-VERSION='1.x.x'
+VERSION='1.3.0-dev'
 
 findConfigFile() {
 	BLASH_DEFAULT_CONFIGDIR="${BLASH_DEFAULT_CONFIGDIR:=${XDG_CONFIG_HOME:=$HOME/.config}}"

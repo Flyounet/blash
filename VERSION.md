@@ -9,7 +9,7 @@
  - TAGLIST to remove
  ? URLs list
 
-## 1.3.x - 2016/12/?? (Flyounet)
+## 1.3.0 - 2016/12/12 (Flyounet)
 
  + Added New Furry theme.
  * Rework on old themes.
