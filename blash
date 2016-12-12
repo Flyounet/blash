@@ -63,18 +63,24 @@ config() {
 
 	# OUTPUT_DIR stores all compiled html
 	export OUTPUT_DIR="${OUTPUT_DIR:=${__w}out}"
-
-	# DRAFT_DIR stores all compiled html
+	# DRAFT_DIR stores all draft compiled html
 	export DRAFT_DIR="${DRAFT_DIR:=${__w}draft}"
+	# HIDDEN_DIR stores all hidden compiled html
+	export HIDDEN_DIR="${HIDDEN_DIR:=${OUTPUT_DIR}}"
+
+	# BLASH_THEME_DIR where to find the theme
+	export BLASH_THEME_DIR="${BLASH_THEME_DIR:=${__w}themes/default}"
+	# BLASH_THEME_LAYOUT_DIR : For a particular where to find the layout files ".md"
+	export BLASH_THEME_LAYOUT_DIR="${BLASH_THEME_LAYOUT_DIR:=${BLASH_THEME_DIR}/layout}"
+	# BLASH_THEME_PUBLIC_DIR : For a particular where to find the public files (image, css, ...)
+	export BLASH_THEME_PUBLIC_DIR="${BLASH_THEME_PUBLIC_DIR:=${BLASH_THEME_DIR}/public}"
 
 	# LAYOUT_DIR stores all layout markdown files
-	export LAYOUT_DIR="${LAYOUT_DIR:=${__w}themes/default/layout}"
+#	export LAYOUT_DIR="${LAYOUT_DIR:=${__w}themes/default/layout}"
+	export LAYOUT_DIR="${BLASH_THEME_LAYOUT_DIR}"
 
 	# PUBLIC_DIR stores css and static images
-	export PUBLIC_DIR="${PUBLIC_DIR:=${__w}themes/default/public}"
-
-	# HIDDEN_DIR stores css and static images
-	export HIDDEN_DIR="${HIDDEN_DIR:=${OUTPUT_DIR}}"
+	export PUBLIC_DIR="${PUBLIC_DIR:=${__w}public}"
 
 	# site
 	export SITE_NAME="${SITE_NAME:=a blash blog}"
@@ -182,11 +188,13 @@ get_posts_headers() {
 		for _sub_lid in ${!POST_HEADERS[@]}; do
 			POSTS_HEADERS[post_${_lid}_${_sub_lid}]="${POST_HEADERS[${_sub_lid}]}"
 		done
+		# Post is Draft
 		[[ ! -z "${POSTS_HEADERS[post_${_lid}_draft]}" && "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'false' ]] && { POSTS_DRAFT[${_lid}]=${_lid}; continue; }
+		# Post is Hidden
 		[[ ! -z "${POSTS_HEADERS[post_${_lid}_hidden]}" && "${POSTS_HEADERS[post_${_lid}_hidden],,}" != 'false' ]] && {
-			[[ ! -z "${POSTS_HEADERS[post_${_lid}_draft]}" && "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'false' ]] || \
-				POSTS_HIDDEN[${_lid}]=${_lid}
-				continue;
+			# Post is Hidden & not Draft
+			[[ ! -z "${POSTS_HEADERS[post_${_lid}_draft]}" && "${POSTS_HEADERS[post_${_lid}_draft],,}" != 'false' ]] || POSTS_HIDDEN[${_lid}]=${_lid};
+			continue;
 		}
 		POSTS_PUBLISHED[${_x}]="${_lid}"
 		POSTS_HEADERS[post_${_lid}__logicalid]=${_x}
@@ -495,6 +503,8 @@ post_rename() {
 	_pTitle="$(header title < "${_fname}")"
 	_nDate="$(date -u "+%FT%TZ" --date "${_pDate//[ZT]/ }" 2>/dev/null)"
 	[[ ${?} -ne 0 ]] && die "Date invalide."
+	[[ "${_fname}" = "${POST_DIR}/$(date -u +%Y-%m-%d --date "${_nDate//[ZT]/ }")-$(slug <<< "${_pTitle}").md" ]] && \
+		die "Filename unchanged."
 	mv "${_fname}" "${POST_DIR}/$(date -u +%Y-%m-%d --date "${_nDate//[ZT]/ }")-$(slug <<< "${_pTitle}").md" && \
 		echo "${POST_DIR}/$(date -u +%Y-%m-%d --date "${_nDate//[ZT]/ }")-$(slug <<< "${_pTitle}").md"
 }
@@ -594,12 +604,14 @@ post_infos() {
 	Configuration file	: ${CONFIG_FILE}
 
 	Post directory		: ${POST_DIR}
-	Layout directory	: ${LAYOUT_DIR}
 	Public directory	: ${PUBLIC_DIR}
+	Theme layout directory	: ${BLASH_THEME_LAYOUT_DIR}
+	Theme public directory	: ${BLASH_THEME_PUBLIC_DIR}
 
 	Output directory	: ${OUTPUT_DIR}
 	Draft directory		: ${DRAFT_DIR}
 	Hidden directory	: ${HIDDEN_DIR}
+	Post to test directory	: ${BLASH_EXPORT_POST_TO_TEXT_OUTPUT_DIR}
 
 	Site name		: ${SITE_NAME}
 	Site Description	: ${SITE_DESC}
@@ -609,16 +621,22 @@ post_infos() {
 	Author description	: ${AUTHOR_DESC}
 	Author Email		: ${AUTHOR_EMAIL}
 	Author Email hash	: ${AUTHOR_EMAIL_HASH}
-	Author Github name	: ${AUTHOR_GITHUB}
-	Author Twitter name	: ${AUTHOR_TWITTER}
-
-	Disqus name		: ${DISQUS}
 
 	Tags default list	: ${TAGS_BASELIST}
 	Tags Link		: ${TAGS_LINK}
 	Tags Layout		: ${TAGS_LAYOUT}
 
 	Summary to print	: ${PRINT_ALL_SUMMARY}
+
+	Export post to text	: ${BLASH_EXPORT_POST_TO_TEXT}
+	Post to text extension	: ${BLASH_EXPORT_POST_TO_TEXT_EXT}
+	Export headers in text	: ${BLASH_EXPORT_POST_TO_TEXT_INCLUDE_HEADERS}
+
+	Don't update when edit	: ${BLASH_NO_AUTO_UPDATE_ON_EDIT}
+
+	Auto update on copy	: ${BLASH_ON_COPY_IMPLIES_UPDATE}
+	Auto rename on copy	: ${BLASH_ON_COPY_IMPLIES_RENAME}
+	Auto edit on copy	: ${BLASH_ON_COPY_IMPLIES_EDIT}
 
 	Extra Header(s)		: ${BLASH_EXTRA_HEADER}
 
@@ -650,16 +668,29 @@ _post_blash_markdown() {
 
 # _post_blash_prepare_dirs : Create/update/delete working dirs
 _post_blash_prepare_dirs() {
-	[[ "${DRAFT_DIR}" = '/' && "${OUTPUT_DIR}" = '/' ]] && die "DRAFT_DIR and/or OUTPUT_DIR are equal to /. Can't remove them. Aborting."
+	[[ "$( cd -P "${DRAFT_DIR}" )" = '/' || "$( cd -P "${OUTPUT_DIR}" )" = '/' ]] && die "DRAFT_DIR and/or OUTPUT_DIR are equal to /. Can't remove them. Aborting."
 	# Cleaning DRAFT_DIR & OUTPUT_DIR
-	rm -rf "${DRAFT_DIR}" "${OUTPUT_DIR}"; mkdir -p "${DRAFT_DIR}" "${OUTPUT_DIR}"
-
+	rm -rf -- "${DRAFT_DIR}" "${OUTPUT_DIR}"; mkdir -p -- "${DRAFT_DIR}" "${OUTPUT_DIR}"
+	[[ "${OUTPUT_DIR}" != "${HIDDEN_DIR}" ]] && { [[ "$( cd -P "${HIDDEN_DIR}" )" = '/' ]] || rm -rf -- "${HIDDEN_DIR}"; mkdir -p -- "${HIDDEN_DIR}"; }
+	[[ ! -d "${BLASH_THEME_DIR}" ]] && die "BLASH_THEME_DIR \`${BLASH_THEME_DIR}\` not found. Aborting."
+	[[ ! -d "${BLASH_THEME_PUBLIC_DIR}" ]] && die "BLASH_THEME_PUBLIC_DIR \`${BLASH_THEME_PUBLIC_DIR}\` not found. Aborting."
+	[[ ! -d "${BLASH_THEME_LAYOUT_DIR}" ]] && die "BLASH_THEME_LAYOUT_DIR \`${BLASH_THEME_LAYOUT_DIR}\` not found. Aborting."
 	[[ ! -d "${PUBLIC_DIR}" ]] && die "PUBLIC_DIR \`${PUBLIC_DIR}\` not found. Aborting."
+	[[ "${OUTPUT_DIR}" != "${HIDDEN_DIR}" && ! -d "${HIDDEN_DIR}" ]] && die "HIDDEN_DIR \`${HIDDEN_DIR}\` not found. Aborting."
+	# Next line to be reove soon
 	[[ ! -d "${LAYOUT_DIR}" ]] && die "LAYOUT_DIR \`${LAYOUT_DIR}\` not found. Aborting."
-	[[ -d "${POST_DIR}" ]] || usage
-	[[ -d "${PUBLIC_DIR}" ]] && cp -r "${PUBLIC_DIR}"/. "${OUTPUT_DIR}"
-	[[ -d "${PUBLIC_DIR}" ]] && cp -r "${PUBLIC_DIR}"/. "${DRAFT_DIR}"
+	[[ -d "${POST_DIR}" ]] || { echo "Creating '${POST_DIR}' ..." >&2; mkdir -p -- "${POST_DIR}" || die "Can't create '${POST_DIR}'. Aborting."; }
+#	[[ -d "${POST_DIR}" ]] || usage
+	cp -r -- "${BLASH_THEME_PUBLIC_DIR}/." "${OUTPUT_DIR}"
+	cp -r -- "${BLASH_THEME_PUBLIC_DIR}/." "${DRAFT_DIR}"
+	cp -r -- "${PUBLIC_DIR}"/. "${OUTPUT_DIR}"
+	cp -r -- "${PUBLIC_DIR}"/. "${DRAFT_DIR}"
+
+#	[[ -d "${PUBLIC_DIR}" ]] && cp -r "${PUBLIC_DIR}"/. "${OUTPUT_DIR}"
+#	[[ -d "${PUBLIC_DIR}" ]] && cp -r "${PUBLIC_DIR}"/. "${DRAFT_DIR}"
+#	[[ -d "${PUBLIC_DIR}" ]] && cp -r "${PUBLIC_DIR}"/. "${DRAFT_DIR}"
 	touch "${DRAFT_DIR}/index.html"
+	[[ ! -f "${PUBLIC_DIR}/index.html" ]] && touch "${PUBLIC_DIR}/index.html"
 	# shouldn't I have to manage HIDDEN_DIR ?
 }
 
@@ -725,18 +756,18 @@ _post_blash_hidden() {
 	fi
 }
 
-# _post_blash_get_previous_post : Return the name of the previous post
-_post_blash_get_previous_post() {
-	local _prev; (( _prev=${POSTS_HEADERS[post_${1}__logicalid]}-1 ));
-	[[ ${1} -eq 0 || ${_prev} -eq 0 ]] && { echo -n 'index'; return 0; }
-	echo -n "${POSTS_HEADERS[post_${POSTS_PUBLISHED[${_prev}]}__post_filename_noext]}"
+# _post_blash_get_next_post : Return the name of the next post
+_post_blash_get_next_post() {
+	local _next; (( _next=${POSTS_HEADERS[post_${1}__logicalid]}-1 ));
+	[[ ${1} -eq 0 || ${_next} -eq 0 ]] && { echo -n 'index'; return 0; }
+	echo -n "${POSTS_HEADERS[post_${POSTS_PUBLISHED[${_next}]}__post_filename_noext]}"
 }
 
-# _post_blash_get_inext_post : Return the name of the next post
-_post_blash_get_next_post() {
-	local _next; (( _next=${POSTS_HEADERS[post_${1}__logicalid]}+1 ));
-	[[ ${1} -eq ${#POSTS_PUBLISHED[@]} || ${_next} -gt ${#POSTS_PUBLISHED[@]} ]] && { echo -n 'index'; return 0; }
-	echo -n "${POSTS_HEADERS[post_${POSTS_PUBLISHED[${_next}]}__post_filename_noext]}"
+# _post_blash_get_previous_post : Return the name of the previous post
+_post_blash_get_previous_post() {
+	local _prev; (( _prev=${POSTS_HEADERS[post_${1}__logicalid]}+1 ));
+	[[ ${1} -eq ${#POSTS_PUBLISHED[@]} || ${_prev} -gt ${#POSTS_PUBLISHED[@]} ]] && { echo -n 'index'; return 0; }
+	echo -n "${POSTS_HEADERS[post_${POSTS_PUBLISHED[${_prev}]}__post_filename_noext]}"
 }
 
 # _post_blash_is_new_section : Define object for a new section

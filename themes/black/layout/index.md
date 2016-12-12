@@ -27,7 +27,7 @@
 
 	<footer id="author" class="row">
 		<section class="col-md-5">
-			<span class="text-center">Page générée par une version <a href="http://github.com/Flyounet/baker">modifiée</a> de <a href="http://github.com/taylorchu/baker">baker</a>.</span>
+			<span class="text-center">Ce site est généré dans mon terminal par <a href="http://github.com/Flyounet/blash" title="Utilisé ici même">Blash</a>.</span>
 @if RSS_DATE
 			<span class="text-center"><i class="fa-li fa fa-rss"></i><a href="rss.xml">RSS</a></span>
 @end
