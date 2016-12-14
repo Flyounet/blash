@@ -573,13 +573,13 @@ post_list() {
 # post_post creates a post (in the POST_DIR) with the minimum information 
 post_post() {
 	readonly title="${@}"
-	[[ "$title" ]] || usage
+	[[ "${title}" ]] || usage
 
-	mkdir -p "$POST_DIR" || die "Can't create '$POST_DIR'"
-	readonly post_file="$POST_DIR/$(date +%Y-%m-%d)-$(slug <<< "$title").md"
-	cat > "$post_file" <<-EOF
+	mkdir -p "${POST_DIR}" || die "Can't create '$POST_DIR'"
+	readonly post_file="${POST_DIR}/$(date +%Y-%m-%d)-$(slug <<< "${title}").md"
+	cat > "${post_file}" <<-EOF
 	---
-	title: $title
+	title: ${title}
 	date: $(date -u +%FT%TZ)
 	update: 
 	tags: ${TAGS_BASELIST}
@@ -591,8 +591,8 @@ post_post() {
 	summary: 
 	---
 	EOF
-	[[ ! -z "${BLASH_EXTRA_HEADER}" ]] && sed -i -e 's/^\(summary:[[:space:]]*\)$/'"${BLASH_EXTRA_HEADER}::"'\1/g' -e $'s/::/\\n/g' "$post_file"
-	echo "$post_file"
+	[[ ! -z "${BLASH_EXTRA_HEADER}" ]] && sed -i -e 's/^\(summary:[[:space:]]*\)$/'"${BLASH_EXTRA_HEADER}::"'\1/g' -e $'s/::/\\n/g' "${post_file}"
+	echo "${post_file}"
 	[[ "$EDITOR" ]] && ${EDITOR:=vim} "$post_file"
 }
 
