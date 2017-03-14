@@ -1,9 +1,9 @@
-## 2.0.x - 2017/02/?? (Flyounet)
+## 2.0.x - 2017/12/?? (Flyounet)
 
  - Old legacy commands (post/bake/...) to remove.
  - When generating a site, generate only a given id (or only modified ones)
 
-## 1.4.x - 2016/12/?? (Flyounet)
+## 1.4.x - 2017/08/?? (Flyounet)
 
  * Default Template variables change. Name uniformisation.
  - TAGLIST to remove
