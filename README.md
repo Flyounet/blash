@@ -276,4 +276,4 @@ Here are some variables you could change (in fact all could be changed, it will 
 
 It currently uses the implementation from [Daring Fireball](http://daringfireball.net/projects/markdown/). As a consequence, `perl` is needed for `blash` to work.
 
-![blash](https://github.com/Flyounet/blash/raw/master/themes/default/public/image/blash.jpg)
+![blash](https://github.com/Flyounet/blash/raw/master/themes/legacy-old/public/image/blash.jpg)
