@@ -9,7 +9,7 @@
  - TAGLIST to remove
  ? URLs list
 
-## 1.3.0 - 2016/12/12 (Flyounet)
+## 1.3.0 - 2017/03/14 (Flyounet) PI Day
 
  + Added New Furry theme.
  * Rework on old themes.
