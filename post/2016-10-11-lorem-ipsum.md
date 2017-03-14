@@ -1,8 +1,9 @@
 ---
 title: Lorem Ipsum
 date: 2016-10-11T07:48:24Z
-update: 
+update: 2016-11-22T18:54:40Z
 tags: mylife,blash
+indexTimeline: cred
 layout: post
 draft: false
 hidden: false
