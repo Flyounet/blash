@@ -1,0 +1,240 @@
+/* Fonts */
+@font-face {
+ font-family: 'Yanone Kaffeesatz';
+ font-style: normal;
+ font-weight: 400;
+ src: local('Yanone+Kaffeesatz'), local('Yanone Kaffeesatz Regular'), local('YanoneKaffeesatz-Regular'), url(Yanone+Kaffeesatz.ttf), url(http://fonts.gstatic.com/s/yanonekaffeesatz/v7/YDAoLskQQ5MOAgvHUQCcLbvy90DtE_Pg_qiF9bHvTzw.ttf) format('truetype');
+}
+
+/* Global element */
+html { height: 100%; }
+* { margin: 0; padding: 0; }
+body {
+ font: normal .80em 'trebuchet ms', arial, sans-serif;
+ background: #F7F7F7 url(pattern.png) fixed;
+ color: #555;
+}
+p {
+ padding: 10px 0 10px 0;
+ line-height: 1.5em;
+ font-size: 107%;
+}
+pre {
+ padding: 10px 0 10px 5px;
+ background: #F7F7F7;
+}
+img { border: 0; }
+a, a:hover {
+ outline: none;
+ text-decoration: none;
+ color: #35BDF5;
+}
+a:hover { text-decoration: underline; }
+h1, h2, h3, h4, h5, h6 { font: normal 170% 'Yanone Kaffeesatz', arial, sans-serif; }
+.paperclip {
+ float: left;
+ position: relative;
+ z-index: 0;
+ padding: 0;
+ margin-top: -27px;
+ margin-left: -23px;
+ height: 70px;
+ width: 70px;
+}
+
+/* main */
+main {
+ display: flex;
+ flex-direction: column;
+ width: 950px; 
+ margin: 20px auto;
+}
+
+/* ***** header ***** */
+main header { height: 100px; }
+main header h1 {
+ font: normal 350% 'Yanone Kaffeesatz', arial, sans-serif;
+ padding: 5px 0 0 17px;
+ color: #35BDF5;
+}
+main header p {
+ padding-left: 17px;
+ font: 13px 'Tahoma', arial; 
+ color: #444;
+}
+main header:hover h1 i { color: orange !important; }
+
+/* ***** Menu under Header ***** */
+main > nav {
+ z-index: 0;
+ height: 46px;
+ width: 900px; 
+ display: flex;
+ flex-direction: row-reverse;
+ padding: 0;
+ margin: 0;
+ margin-bottom: -4px;
+}
+main > nav ul {
+ display: flex;
+ flex-direction: row-reverse;
+ padding: 0;
+ margin: 0;
+}
+main > nav ul li {
+ list-style: none;
+ font: normal 170% 'Yanone Kaffeesatz', sans-serif;
+ text-decoration: none;
+ height: 20px;
+ padding: 7px 23px 15px 23px;
+ text-align: center;
+}
+main > nav ul li.active {
+ background: #fff;
+ border: 1px solid #ddd;
+ border-bottom: 0;
+ color: #F14E23;
+}
+main > nav i{
+ font-size: 100% !important;
+ color: #444;
+}
+main > nav .active i, main > nav li i:hover { color: #F14E23; }
+/* .content */
+#content {
+ display: flex;
+ flex-wrap: nowrap;
+ justify-content: space-around;
+ flex-direction: row;
+ width: 950px;
+ overflow: hidden;
+ margin: 0 auto 0 auto;
+ padding: 0;
+ background: #fff;
+ border: 1px solid #E7E7E7;
+}
+
+/* ***** Navigation ***** */
+#content aside, #content aside nav ul {
+ display: flex;
+ flex-direction: column;
+}
+#content aside {
+ width: 250px;
+ margin: 25px 0;
+}
+#content aside .boxp {
+ border: 1px solid #eee;
+ background: #FBFBFB;
+ margin-bottom: 25px;
+ padding: 0;
+}
+#content aside .boxp nav {
+ width: 200px;
+ margin: 0 0px 0px 0;
+ padding: 0 0 15px 15px;
+}
+#content aside nav h3 {
+ font-size: 200%;
+ padding: 10px 15px;
+ margin: 0 1px;
+}
+#content aside nav ul { margin: 2px 0 22px 20px; }
+#content aside nav ul li {
+ list-style-type: circle;
+ margin: 0 0 0 0; 
+ padding: 0 0 4px 5px;
+}
+
+/* ***** Contenu ***** */
+#content section {
+ text-align: left;
+ width: 630px;
+ padding: 25px 0 5px 5px;
+ margin: 0;
+}
+
+/* .content section h2 (Date Title) */
+#content section > h2 {
+ text-align: center;
+ margin-bottom: 0;
+ padding-bottom: 0.5em;
+}
+#content section section {
+ padding-top: 0;
+ margin-bottom: 25px;
+ padding-bottom: 1em;
+}
+
+/* article */
+article h3:first-child {
+ font: normal 250% 'Yanone Kaffeesatz', arial, sans-serif;
+ color: #444; 
+ margin: 0 0 15px 0;
+ padding: 5px 0 5px 0;
+}
+
+article mark {
+ margin-bottom: 20px;
+ padding: 0 0 5px 0;
+ font: normal 100% arial, sans-serif;
+ color: #F14E23;
+ line-height: 1em;
+ background: transparent;
+}
+article mark time { font-weight: bolder; }
+article { margin-bottom: 50px; }
+#content section > article h1 { font-size: 325%; color: #35BDF5; }
+#content section > article h2 { font-size: 300%; color: #35BDF5; }
+#content section > article h3 { font-size: 275%; color: #35BDF5; }
+#content section > article h4 { font-size: 250%; color: #35BDF5; }
+#content section > article h5 { font-size: 225%; color: #35BDF5; }
+#content section > article h6 { font-size: 200%; color: #35BDF5; }
+#content section > article ul li, #content section > article ol li {
+ margin-left: 1.5em;
+ padding-left: 0.5em;
+}
+#content section > article ul li { list-style-type: circle; }
+#content section > article blockquote {
+ font-size: 95%;
+ margin-top: 10px;
+ margin-bottom: 10px;
+ margin-left: 25px;
+ padding-left: 15px;
+ border-left: 3px solid #e7e7e7;
+ background: #FBFBFB;
+}
+/* ***** Footer ***** */
+main > footer {
+ display: flex;
+ flex-direction: row;
+ width: 950px;
+ background: #FFF;
+ margin-top: 25px;
+ justify-content: space-around;
+ border: 1px solid #E7E7E7;
+}
+main > footer section {
+ width: 350px;
+ border: 1px solid #eee;
+ background: #FBFBFB;
+ margin: 25px;
+ padding: 0;
+}
+main > footer section nav {
+ margin: 0 0px 0px 0;
+ padding: 0 0 15px 15px;
+}
+main > footer section nav h3 {
+ font-size: 200%;
+ padding: 10px 15px;
+ margin: 0 1px;
+}
+main > footer section nav ul { margin: 2px 0 0 20px; }
+main > footer section nav ul li {
+ list-style-type: none;
+ margin: 0 0 0 0; 
+ padding: 0 0 4px 5px;
+}
+main > footer li:hover i { color: orange !important; }
+

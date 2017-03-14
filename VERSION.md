@@ -1,11 +1,24 @@
+## 2.0.x - 2017/02/?? (Flyounet)
+
+ - Old legacy commands (post/bake/...) to remove.
+ - When generating a site, generate only a given id (or only modified ones)
+
 ## 1.4.x - 2016/12/?? (Flyounet)
 
  * Default Template variables change. Name uniformisation.
  - TAGLIST to remove
+ ? URLs list
 
-## 1.3.x - 2016/11/?? (Flyounet)
+## 1.3.0 - 2017/03/14 (Flyounet) PI Day
 
- + URLs list
+ + Added New Furry theme.
+ * Rework on old themes.
+ + Variable added to provide generation date of pages
+ * An issue was present when test was done to generate Hidden Post. Corrected.
+ * Issue when trying to rename a post with same name. Corrected.
+ + Added variables to manage templates.
+ + Added missing Variables in the post_infos function.
+ * Issue when generating prev/next post link. Next was Prev and Prev was Next. Corrected.
 
 ## 1.2.4 - 2016/11/14 (Flyounet)
 
