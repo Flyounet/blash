@@ -1,0 +1,15 @@
+
+PREFIX=/usr/local
+
+install:
+	cp -f blash $(PREFIX)/bin/blash
+	if [ ! -d "/usr/local/share/blash" ]; then mkdir -p "/usr/local/share/blash"; fi
+	cp -r themes /usr/local/share/blash/themes
+	cp -r config-examples /usr/local/share/blash/themes
+	cp -f Makefile "/usr/local/share/blash/Makefile"
+
+uninstall:
+	rm -f $(PREFIX)/bin/blash
+	cd /usr/local/share && rm -rf -- ./blash/
+
+.PHONY: install uninstall
