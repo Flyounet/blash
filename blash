@@ -7,7 +7,7 @@
 # +--------------------------------------------------------------------------+
 # |                                                                          |
 # | Blash : A Static Blog Generator written (mostly) in Bash (and Perl)      |
-# | Copyright (C) 2015-2016 Flyounet — Tous droits réservés.                 |
+# | Copyright (C) 2015-2018 Flyounet — Tous droits réservés.                 |
 # |                                                                          |
 # | Cette œuvre est distribuée SANS AUCUNE GARANTIE hormis celle d'être      |
 # | distribuée sous les termes de la Licence Demerdez-vous («Demerden Sie    |
@@ -163,14 +163,21 @@ header() {
 # get_headers : If an argument is set, it should be the filename
 get_headers() {
 	declare -A POST_HEADERS=()
+#set -xv
+	local _heads="$( headers | sed -e '/^[[:space:]]*[#:].*[[:space:]]*:/d;s/^[[:space:]]*\([^:]*\)[[:space:]]*:[[:space:]]*\(.*\)/\1 \2/g' )"
+	[[ -z "${_heads}" ]] && die "Header issue in '${1}'. Aborting !"
 	while read h v; do
+		[[ -z "${h}" ]] && die "Header issue in '${1}'. Aborting !"
 		POST_HEADERS[${h}]="${v}"
-	done <<< "$( headers | sed -e '/^[[:space:]]*[#:].*[[:space:]]*:/d;s/^[[:space:]]*\([^:]*\)[[:space:]]*:[[:space:]]*\(.*\)/\1 \2/g' )"
+	done <<< "${_heads}"
+set +xv
+#	done <<< "$( headers | sed -e '/^[[:space:]]*[#:].*[[:space:]]*:/d;s/^[[:space:]]*\([^:]*\)[[:space:]]*:[[:space:]]*\(.*\)/\1 \2/g' )"
 	[[ ! -z "${POST_HEADERS[date]:-}" ]] && POST_HEADERS[date-notz]="${POST_HEADERS[date]//[TZ]/ }"
 	[[ ! -z "${1:-}" && -e "${1}" ]] && { POST_HEADERS[_post_filename]="${1}"; POST_HEADERS[_post_filename_noext]="$(basename "${1}" '.md')"; }
 	[[ "${POST_HEADERS[nomarkdown]:-false}" != 'true' && ! -z "${POST_HEADERS[summary]:-}" ]] && \
 		POST_HEADERS[summary_markdown]="$(perl -e "${MkDown}" <<< "${POST_HEADERS[summary]}")"
 	echo "$(declare -p POST_HEADERS)"
+	unset _heads
 }
 
 # get_posts_headers Print all headers for all posts
@@ -577,6 +584,7 @@ post_post() {
 
 	mkdir -p "${POST_DIR}" || die "Can't create '$POST_DIR'"
 	readonly post_file="${POST_DIR}/$(date +%Y-%m-%d)-$(slug <<< "${title}").md"
+	[[ -e "${post_file}" && ${__P:=0} -eq 0 ]] && die 'Draft post already exists. Use -P to overwrite.'
 	cat > "${post_file}" <<-EOF
 	---
 	title: ${title}
@@ -668,7 +676,8 @@ _post_blash_markdown() {
 
 # _post_blash_prepare_dirs : Create/update/delete working dirs
 _post_blash_prepare_dirs() {
-	[[ "$( cd -P "${DRAFT_DIR}" )" = '/' || "$( cd -P "${OUTPUT_DIR}" )" = '/' ]] && die "DRAFT_DIR and/or OUTPUT_DIR are equal to /. Can't remove them. Aborting."
+#	set -xv
+	[[ "$( cd -P "${DRAFT_DIR}"; pwd )" = '/' || "$( cd -P "${OUTPUT_DIR}"; pwd )" = '/' ]] && die "DRAFT_DIR and/or OUTPUT_DIR are equal to /. Can't remove them. Aborting."
 	# Cleaning DRAFT_DIR & OUTPUT_DIR
 	rm -rf -- "${DRAFT_DIR}" "${OUTPUT_DIR}"; mkdir -p -- "${DRAFT_DIR}" "${OUTPUT_DIR}"
 	[[ "${OUTPUT_DIR}" != "${HIDDEN_DIR}" ]] && { [[ "$( cd -P "${HIDDEN_DIR}" )" = '/' ]] || rm -rf -- "${HIDDEN_DIR}"; mkdir -p -- "${HIDDEN_DIR}"; }
@@ -692,6 +701,7 @@ _post_blash_prepare_dirs() {
 	touch "${DRAFT_DIR}/index.html"
 	[[ ! -f "${PUBLIC_DIR}/index.html" ]] && touch "${PUBLIC_DIR}/index.html"
 	# shouldn't I have to manage HIDDEN_DIR ?
+	set +xv
 }
 
 # _post_blash_print_status : Print the status (ID/postName/[Status]/[Tags]/Hidden)
@@ -748,6 +758,11 @@ _post_blash_hidden() {
 			_post_blash_summary_print ${_lid}
 			render_file "${POSTS_HEADERS[post_${_lid}__post_filename]}" > "${HIDDEN_DIR}/${POSTS_HEADERS[post_${_lid}__post_filename_noext]}.html" &
 			# We do not copy source of Hidden posts.
+#set -xv
+#echo "${!POSTS_HEADERS[@]}" >&2
+			[[ "${POSTS_HEADERS[post_${1}_ptt_forced],,}" = 'true' ]] && \
+				copyPTT "${POSTS_HEADERS[post_${_lid}__post_filename]}" "${HIDDEN_DIR}/${POSTS_HEADERS[post_${_lid}__post_filename_noext]}" &
+set +xv
 			_post_blash_print_status ${_lid}
 		done
 		) | column -t
@@ -979,6 +994,7 @@ usage() {
 	  -n            No default config file loaded BLASH_CONFIG
 	  -o [title|id] open the page (using xdg-open)
 	  -p "[title]"  draft a post
+	  -P            Force the draft post to be created (replacing existing one)
 	  -r [title|id] parse a post content to re-generate the filename
 	  -s [title|id] toggle the draft status of a post
 	  -S <all|none|user> Override the PRINT_ALL_SUMMARY variable
@@ -1033,7 +1049,7 @@ if [[ ${1:-} =~ ${_regex} ]]; then
 else
 	# used      : A--bCcDd-e-f-gHhI------l---n-o-p---rSs-t-Uu-v-wXx-Zz----------
 	# available : -aB-----E-F-G----iJjKkL-MmN-O-P-QqR---T---V-W---Yy--0123456789
-	while getopts ":c:d:e:f:g:o:p:r:s:u:S:w:bCDhHIlntUvxXzZ" option; do
+	while getopts ":c:d:e:f:g:o:p:r:s:u:S:w:bCDhHIlnPtUvxXzZ" option; do
 		case ${option} in
 			A) __A=1;;
 			b) __b=1;;
@@ -1049,13 +1065,14 @@ else
 			n) __n=1;;
 			o) __o=1;__post="${OPTARG}";;
 			p) __p=1;__post="${OPTARG}";;
+			P) __P=1;;
 			r) __r=1;__post="${OPTARG}";;
 			s) __s=1;__post="${OPTARG}";;
 			S) [[ "${OPTARG,,}" =~ ^(user|all|none)$ ]] || die "Argument '${OPTARG}' unknown."; export PRINT_ALL_SUMMARY="${OPTARG,,}";;
 			t) __t=1;;
 			u) __u=1;__post="${OPTARG}";;
 			U) __U=1;;
-			v) echo -e "${0} v${VERSION} [$Format:%h$]\nblash © Flyounet(2015-2016)\n" ; exit 0;;
+			v) echo -e "${0} v${VERSION} [$Format:%h$]\nblash © Flyounet(2015-2018)\n" ; exit 0;;
 			w) [[ -d "${OPTARG}" ]] && __w="$( cd ${OPTARG}; pwd)/";;
 			x) __x=1;;
 			X) __X=1;;
